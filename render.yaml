@@ -1,0 +1,78 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# Deploy: push this repo to GitHub, then Render → New → Blueprint → pick the
+# repo. Render reads this file, creates the web service, and asks for the
+# values marked `sync: false` in the dashboard. Full walkthrough, including the
+# custom-domain and DNS steps, is in DEPLOY.md.
+#
+# Why the odd-looking build command: vite and typescript are devDependencies,
+# and Render installs with NODE_ENV=production, which makes npm skip them —
+# `npm run build` would then fail with "vite: not found". Asking for dev
+# dependencies in the build step is the fix. They are not installed at runtime.
+services:
+  - type: web
+    name: sonali-paithani
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    # `autoDeploy` on the branch means every git push ships a new version.
+    autoDeploy: true
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: '20.11.1'
+      # Generated once by Render and never shown again in plain text.
+      - key: JWT_SECRET
+        generateValue: true
+
+      # ── Must be filled in before the first boot ──────────────────────────
+      # Postgres connection string (Supabase / Neon free tier both work).
+      - key: DATABASE_URL
+        sync: false
+      # Set the password you want, or leave it and change it in the dashboard
+      # immediately after the first sign-in (Settings → Dashboard password).
+      - key: ADMIN_PASSWORD
+        sync: false
+      # The domain this store answers on, https, no trailing slash.
+      # e.g. https://sonalipaithani.com — locks down CORS and the payment QR.
+      - key: CORS_ORIGIN
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+
+      # ── Production defaults ─────────────────────────────────────────────
+      # Never seed the demo sarees into a live shop.
+      - key: SEED_DEMO_DATA
+        value: 'false'
+      # One proxy (Render's load balancer) in front of Node.
+      - key: TRUST_PROXY
+        value: '1'
+
+      # ── Image uploads ───────────────────────────────────────────────────
+      # Without these, uploads land on ephemeral container disk and vanish on
+      # the next deploy. Supabase → Project Settings → API.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: product-images
+
+      # ── Store identity used inside WhatsApp messages ────────────────────
+      - key: ADMIN_EMAIL
+        value: admin@sonalipaithani.com
+      - key: STORE_NAME
+        value: Sonali Paithani
+      - key: STORE_PHONE
+        value: '919822055443'
+      - key: STORE_WHATSAPP
+        value: '919822055443'
+      - key: STORE_EMAIL
+        value: yeola@sonalipaithani.com
+      - key: STORE_UPI
+        sync: false
+      - key: STORE_ADDRESS
+        value: 'Sonali Paithani, Yeola, Nashik - 423401'

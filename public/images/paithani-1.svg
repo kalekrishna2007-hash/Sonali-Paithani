@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800" role="img" aria-label="Maroon and gold Paithani saree">
+  <defs>
+    <linearGradient id="p1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8d2431"/><stop offset="0.5" stop-color="#701c27"/><stop offset="1" stop-color="#4d1119"/>
+    </linearGradient>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0dfae"/><stop offset="0.45" stop-color="#c9a227"/><stop offset="1" stop-color="#8f7118"/>
+    </linearGradient>
+    <pattern id="buti1" width="74" height="74" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="url(#g1)" stroke-width="1.5">
+        <path d="M37 12l7 12-7 12-7-12z"/>
+        <circle cx="37" cy="24" r="2.6" fill="#d9b84a" stroke="none"/>
+        <path d="M6 56c6-5 12-5 18 0M50 56c6-5 12-5 18 0"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="600" height="800" fill="url(#p1)"/>
+  <rect width="600" height="800" fill="url(#buti1)" opacity="0.5"/>
+  <g fill="none" stroke="url(#g1)" stroke-width="6">
+    <rect x="18" y="18" width="564" height="764" rx="4"/>
+    <rect x="34" y="34" width="532" height="732" rx="3" stroke-width="2"/>
+  </g>
+  <g opacity="0.95">
+    <rect x="34" y="560" width="532" height="206" fill="url(#g1)" opacity="0.16"/>
+    <g fill="none" stroke="url(#g1)" stroke-width="3">
+      <path d="M120 640c22-26 44-26 66 0s44 26 66 0 44-26 66 0 44 26 66 0 44-26 66 0"/>
+      <path d="M120 690c22-26 44-26 66 0s44 26 66 0 44-26 66 0 44 26 66 0 44-26 66 0"/>
+      <path d="M60 760c22-26 44-26 66 0s44 26 66 0 44-26 66 0 44 26 66 0 44-26 66 0"/>
+    </g>
+  </g>
+  <g transform="translate(300 300)" fill="none" stroke="url(#g1)" stroke-width="3">
+    <circle r="104" stroke-width="2"/>
+    <path d="M0-84c30-34 60-34 84-8-22 32-56 40-84 8z"/>
+    <path d="M0-84c-30-34-60-34-84-8 22 32 56 40 84 8z"/>
+    <path d="M-6 8c-30 4-52 22-60 52 32 6 56-12 60-52z"/>
+    <path d="M6 8c30 4 52 22 60 52-32 6-56-12-60-52z"/>
+    <path d="M0-70v150" stroke-width="2"/>
+  </g>
+  <text x="300" y="516" text-anchor="middle" font-family="Georgia, serif" font-size="26" letter-spacing="8" fill="#e8d49a">PEACOCK MUNNI</text>  <text x="300" y="546" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="13" letter-spacing="6" fill="#e0cb96">PURE SILK · HANDLOOM</text>
+
+</svg>

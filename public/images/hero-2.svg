@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Bridal Paithani drape in deep red with gold zari">
+  <defs>
+    <linearGradient id="h2bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#44261f"/><stop offset="0.55" stop-color="#2c1a17"/><stop offset="1" stop-color="#170e0d"/>
+    </linearGradient>
+    <linearGradient id="h2drape" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c22f34"/><stop offset="0.5" stop-color="#8a1c2b"/><stop offset="1" stop-color="#52121b"/>
+    </linearGradient>
+    <linearGradient id="h2gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7ecc4"/><stop offset="0.45" stop-color="#d3ab2e"/><stop offset="1" stop-color="#8d6d14"/>
+    </linearGradient>
+    <radialGradient id="h2glow" cx="0.62" cy="0.4" r="0.55">
+      <stop offset="0" stop-color="#c08a45" stop-opacity="0.5"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#h2bg)"/>
+  <ellipse cx="1000" cy="380" rx="640" ry="420" fill="url(#h2glow)"/>
+
+  <g opacity="0.8" fill="none" stroke="#6b5236" stroke-width="3">
+    <path d="M120 900V420c0-140 76-224 168-224s168 84 168 224v480"/>
+    <path d="M1256 900V470c0-112 60-180 134-180s134 68 134 180v430"/>
+  </g>
+
+  <g transform="translate(400 120)">
+    <path d="M0 0c120 40 190 140 200 300 12 190-30 340-60 480H-40c-30-140-72-290-60-480C-90 140-20 40 0 0z" fill="url(#h2drape)" opacity="0.95"/>
+    <g fill="none" stroke="url(#h2gold)" stroke-width="5" opacity="0.9">
+      <path d="M-120 470c34-30 68-30 102 0s68 30 102 0 68-30 102 0 68 30 102 0"/>
+      <path d="M-100 530c34-30 68-30 102 0s68 30 102 0 68-30 102 0 68 30 102 0"/>
+      <path d="M-70 620c34-30 68-30 102 0s68 30 102 0 68-30 102 0 68 30 102 0"/>
+      <path d="M-40 700c34-30 68-30 102 0s68 30 102 0 68-30 102 0 68 30 102 0"/>
+    </g>
+    <g fill="none" stroke="#f0dcae" stroke-width="2" opacity="0.65">
+      <path d="M-20 120c40 34 76 34 116 0M-20 200c40 34 76 34 116 0M-20 280c40 34 76 34 116 0"/>
+    </g>
+  </g>
+
+  <g transform="translate(1080 210) scale(1.1)" fill="none" stroke="url(#h2gold)" stroke-width="4">
+    <path d="M0 0c60 0 108 46 108 104S60 208 0 208-108 162-108 104 60 0 0 0z" stroke-width="3" opacity="0.8"/>
+    <path d="M0 40c34 24 34 72 0 100-34-28-34-76 0-100z"/>
+    <path d="M-40 90c24-26 56-26 80 0" stroke-width="2"/>
+  </g>
+
+  <rect width="1600" height="900" fill="#150d0b" opacity="0.32"/>
+</svg>

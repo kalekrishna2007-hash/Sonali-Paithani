@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800" role="img" aria-label="Royal blue contemporary Paithani saree">
+  <defs>
+    <linearGradient id="p4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2b4a9b"/><stop offset="0.5" stop-color="#1e3a80"/><stop offset="1" stop-color="#122452"/>
+    </linearGradient>
+    <linearGradient id="g4" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f0e0b0"/><stop offset="0.5" stop-color="#c9a227"/><stop offset="1" stop-color="#8a6c14"/>
+    </linearGradient>
+    <pattern id="check4" width="52" height="52" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="url(#g4)" stroke-width="0.9" opacity="0.75">
+        <path d="M0 26h52M26 0v52"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="600" height="800" fill="url(#p4)"/>
+  <rect width="600" height="800" fill="url(#check4)"/>
+  <g fill="none" stroke="url(#g4)">
+    <rect x="18" y="18" width="564" height="764" stroke-width="5"/>
+    <rect x="36" y="36" width="528" height="728" stroke-width="1.6"/>
+  </g>
+  <g fill="none" stroke="url(#g4)" stroke-width="2.4" opacity="0.9">
+    <path d="M36 620l56 56-56 56M92 620l56 56-56 56M148 620l56 56-56 56M204 620l56 56-56 56M260 620l56 56-56 56M316 620l56 56-56 56M372 620l56 56-56 56M428 620l56 56-56 56M484 620l56 56-56 56"/>
+  </g>
+  <g transform="translate(300 320)" fill="none" stroke="url(#g4)" stroke-width="2.4">
+    <path d="M0-90l64 90-64 90-64-90z"/>
+    <path d="M0-46l30 46-30 46-30-46z" stroke-width="1.6"/>
+    <circle r="7" fill="#e3c968" stroke="none"/>
+  </g>
+  <text x="300" y="300" text-anchor="middle" font-family="Georgia, serif" font-size="22" letter-spacing="10" fill="#e8d9ac">CONTEMPORARY</text>
+</svg>

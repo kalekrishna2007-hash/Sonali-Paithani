@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Contemporary Paithani drape in teal and gold">
+  <defs>
+    <linearGradient id="h3bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14352f"/><stop offset="0.55" stop-color="#0e2723"/><stop offset="1" stop-color="#081715"/>
+    </linearGradient>
+    <linearGradient id="h3drape" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f7d69"/><stop offset="0.5" stop-color="#12564a"/><stop offset="1" stop-color="#0a332c"/>
+    </linearGradient>
+    <linearGradient id="h3gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f3e5ba"/><stop offset="0.5" stop-color="#c9a227"/><stop offset="1" stop-color="#8a6b16"/>
+    </linearGradient>
+    <pattern id="h3grid" width="90" height="90" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#c9a227" stroke-width="0.7" opacity="0.28">
+        <path d="M0 45h90M45 0v90"/>
+      </g>
+    </pattern>
+    <radialGradient id="h3glow" cx="0.5" cy="0.35" r="0.6">
+      <stop offset="0" stop-color="#6fae92" stop-opacity="0.4"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#h3bg)"/>
+  <rect width="1600" height="900" fill="url(#h3grid)"/>
+  <ellipse cx="820" cy="340" rx="720" ry="440" fill="url(#h3glow)"/>
+
+  <g transform="translate(560 60)">
+    <path d="M0 0c150 0 270 120 300 320 24 168 20 340-16 520H-160c-36-180-40-352-16-520C-146 120-150 0 0 0z" fill="url(#h3drape)" opacity="0.92"/>
+    <g fill="none" stroke="url(#h3gold)" stroke-width="4.5">
+      <path d="M-260 420h520M-250 476h500M-240 532h480"/>
+      <path d="M-190 600l80 80-80 80 80 80M90 600l80 80-80 80 80 80"/>
+    </g>
+    <g fill="none" stroke="#e8d7a6" stroke-width="1.6" opacity="0.6">
+      <path d="M-120 120c50 40 100 40 150 0M-120 200c50 40 100 40 150 0M-120 280c50 40 100 40 150 0"/>
+    </g>
+  </g>
+
+  <g fill="none" stroke="url(#h3gold)" stroke-width="3" opacity="0.75">
+    <path d="M60 900V520c0-70 30-110 78-110s78 40 78 110v380"/>
+    <path d="M1380 900V560c0-60 26-96 66-96s66 36 66 96v340"/>
+  </g>
+
+  <rect width="1600" height="900" fill="#06110f" opacity="0.3"/>
+</svg>

@@ -1,0 +1,23 @@
+# Never bake secrets into an image layer.
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.local
+
+# Rebuilt inside the image / regenerated at runtime.
+node_modules
+dist
+dist-ssr
+uploads
+
+# Local noise.
+.git
+.gitignore
+.freebuff
+*.log
+logs
+.DS_Store
+.vscode
+.idea
+coverage

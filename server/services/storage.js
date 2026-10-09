@@ -1,0 +1,74 @@
+import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { config, storageMode } from '../env.js';
+import { uploadsDir } from '../db.js';
+
+let supabase;
+
+async function getSupabase() {
+  if (!supabase) {
+    const { createClient } = await import('@supabase/supabase-js');
+    supabase = createClient(config.supabase.url, config.supabase.serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+  }
+  return supabase;
+}
+
+const safeName = (name) =>
+  String(name || 'image')
+    .toLowerCase()
+    .replace(/\.[a-z0-9]+$/, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 48) || 'image';
+
+/**
+ * Stores an uploaded image and returns its public URL.
+ * Supabase Storage when keys are configured (free 1 GB tier), otherwise local
+ * disk under /uploads so development needs no accounts at all.
+ */
+export async function saveImage({ buffer, originalname, mimetype }) {
+  const ext = (path.extname(originalname || '') || '.jpg').toLowerCase();
+  const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}-${safeName(originalname)}${ext}`;
+
+  if (storageMode === 'supabase') {
+    const client = await getSupabase();
+    const objectPath = `products/${filename}`;
+    const { error } = await client.storage
+      .from(config.supabase.bucket)
+      .upload(objectPath, buffer, { contentType: mimetype, upsert: false });
+    if (error) throw new Error(`Supabase upload failed: ${error.message}`);
+    const { data } = client.storage.from(config.supabase.bucket).getPublicUrl(objectPath);
+    return { url: data.publicUrl, storage: 'supabase', path: objectPath, bytes: buffer.length };
+  }
+
+  await fs.mkdir(uploadsDir, { recursive: true });
+  await fs.writeFile(path.join(uploadsDir, filename), buffer);
+  return { url: `/uploads/${filename}`, storage: 'local', path: filename, bytes: buffer.length };
+}
+
+export async function deleteImage(imageUrl) {
+  if (!imageUrl) return false;
+  try {
+    if (storageMode === 'supabase' && imageUrl.includes(config.supabase.url)) {
+      const marker = `/${config.supabase.bucket}/`;
+      const index = imageUrl.indexOf(marker);
+      if (index === -1) return false;
+      const objectPath = decodeURIComponent(imageUrl.slice(index + marker.length));
+      const client = await getSupabase();
+      const { error } = await client.storage.from(config.supabase.bucket).remove([objectPath]);
+      return !error;
+    }
+    if (imageUrl.startsWith('/uploads/')) {
+      await fs.unlink(path.join(uploadsDir, path.basename(imageUrl)));
+      return true;
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}
+
+export { storageMode };

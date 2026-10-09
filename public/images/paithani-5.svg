@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800" role="img" aria-label="Deep green Paithani with gold zari pallu">
+  <defs>
+    <linearGradient id="p5" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f6b4f"/><stop offset="0.45" stop-color="#155140"/><stop offset="1" stop-color="#0c3128"/>
+    </linearGradient>
+    <linearGradient id="g5" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7ecc6"/><stop offset="0.4" stop-color="#d8b538"/><stop offset="1" stop-color="#9a7a1b"/>
+    </linearGradient>
+    <pattern id="zari5" width="40" height="40" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="url(#g5)" stroke-width="1.1">
+        <path d="M0 20l20-14 20 14-20 14z"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="600" height="800" fill="url(#p5)"/>
+  <rect x="0" y="0" width="600" height="430" fill="url(#zari5)" opacity="0.32"/>
+  <rect x="0" y="430" width="600" height="370" fill="url(#g5)" opacity="0.55"/>
+  <rect x="0" y="430" width="600" height="370" fill="url(#zari5)" opacity="0.85"/>
+  <g fill="none" stroke="url(#g5)">
+    <rect x="16" y="16" width="568" height="768" stroke-width="6"/>
+    <rect x="32" y="32" width="536" height="736" stroke-width="1.8"/>
+  </g>
+  <g fill="none" stroke="#0c3128" stroke-width="2.2" opacity="0.55">
+    <path d="M0 452h600M0 492h600M0 532h600M0 572h600M0 612h600M0 652h600M0 692h600M0 732h600"/>
+  </g>
+  <g transform="translate(300 230)" fill="none" stroke="url(#g5)" stroke-width="2.6">
+    <circle r="86" stroke-width="1.8"/>
+    <circle r="64" stroke-width="1.4"/>
+    <path d="M0-52c26 20 26 60 0 84-26-24-26-64 0-84z"/>
+  </g>
+  <text x="300" y="250" text-anchor="middle" font-family="Georgia, serif" font-size="21" letter-spacing="8" fill="#e9d9ab">HEAVY ZARI PALLU</text>
+</svg>

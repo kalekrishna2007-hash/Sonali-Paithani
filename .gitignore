@@ -1,0 +1,38 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# ── Secrets & local runtime state ────────────────────────────────────────────
+# server/.env holds the JWT signing key, the admin password and (once you
+# deploy) the database URL and Supabase service key. Those must never reach a
+# remote. Templates stay tracked.
+.env
+.env.*
+!.env.example
+
+# Runtime image uploads when STORAGE_MODE is local.
+uploads/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Freebuff workspace state (not project code)
+.freebuff/
