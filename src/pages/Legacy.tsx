@@ -1,14 +1,16 @@
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAsync } from '../lib/useAsync';
+import { MediaWall } from '../components/MediaGallery';
 
 /**
- * "Our Legacy" — the people who have worn a Sonali Paithani and what they said
- * about it. Every entry (photo, name, review) is published from the dashboard.
+ * "Our Legacy" — photos and video clips of personalities wearing a Sonali
+ * Paithani. Media only: no name, role or quote is published, here or in the
+ * dashboard that feeds it.
  */
 export function Legacy() {
   const { data, loading } = useAsync(() => api.legacy(), []);
-  const stories = data?.legacy || [];
+  const sets = data?.legacy || [];
 
   return (
     <>
@@ -18,8 +20,8 @@ export function Legacy() {
           <h1 style={{ marginTop: '0.4rem' }}>Worn by the people we admire</h1>
           <div className="divider-gold divider-gold--center" />
           <p className="muted" style={{ maxWidth: '46rem', marginInline: 'auto' }}>
-            From the stage to the silver screen, these are the personalities who chose a Saree by Sonali Paithani for
-            their most photographed days — and what they told us afterwards.
+            From the stage to the silver screen — moments with the personalities who chose a saree by Sonali Paithani
+            for their most photographed days.
           </p>
         </div>
       </section>
@@ -27,35 +29,17 @@ export function Legacy() {
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="container">
           {loading ? (
-            <div className="legacy-grid">
-              {[0, 1, 2].map((key) => (
-                <div className="skeleton" style={{ height: '320px' }} key={key} />
+            <div className="media-wall">
+              {[0, 1, 2, 3].map((key) => (
+                <div className="skeleton media-wall__tile" key={key} />
               ))}
             </div>
-          ) : stories.length ? (
-            <div className="legacy-grid">
-              {stories.map((story) => (
-                <article className="legacy-card" key={story.id}>
-                  <div className="legacy-card__media">
-                    <img src={story.image_url || '/images/paithani-1.svg'} alt={story.celebrity_name} loading="lazy" />
-                  </div>
-                  <div className="legacy-card__body">
-                    <span className="legacy-card__mark" aria-hidden>
-                      &ldquo;
-                    </span>
-                    {story.review && <p className="legacy-card__quote">{story.review}</p>}
-                    <div>
-                      <div className="legacy-card__name">{story.celebrity_name}</div>
-                      {story.title && <div className="legacy-card__role">{story.title}</div>}
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+          ) : sets.length ? (
+            <MediaWall entries={sets} />
           ) : (
             <div className="empty">
               <h3>Our legacy gallery is being updated</h3>
-              <p className="muted">New photographs and reviews are on their way. Meanwhile, explore the collection.</p>
+              <p className="muted">New photographs and clips are on their way. Meanwhile, explore the collection.</p>
               <Link className="btn" to="/shop">
                 Explore the collection
               </Link>
@@ -73,7 +57,7 @@ export function Legacy() {
             <h2>Wearing a Sonali Paithani for your big day?</h2>
             <p>
               Send us your occasion on WhatsApp and our studio will help you choose the drape — and we would love to
-              share the story of your day here.
+              feature your photographs here.
             </p>
           </div>
           <Link className="btn btn--gold" to="/shop">

@@ -5,7 +5,7 @@ import type {
   EnquiryStatus,
   Exhibition,
   Facets,
-  LegacyReview,
+  LegacyEntry,
   Product,
   PublicSettings,
   StoreSettings,
@@ -106,7 +106,7 @@ export const api = {
   settings: () => request<PublicSettings>('/api/settings'),
   collections: () => request<{ collections: Collection[] }>('/api/collections'),
   facets: () => request<Facets>('/api/facets'),
-  legacy: () => request<{ legacy: LegacyReview[] }>('/api/legacy'),
+  legacy: () => request<{ legacy: LegacyEntry[] }>('/api/legacy'),
   exhibitions: () => request<{ exhibitions: Exhibition[] }>('/api/exhibitions'),
   products: (params: ProductQuery = {}) =>
     request<{ rows: Product[]; total: number }>(`/api/products${query(params)}`),
@@ -192,11 +192,11 @@ export const adminApi = {
       admin: true,
     }),
 
-  legacy: () => request<{ legacy: LegacyReview[] }>('/api/admin/legacy', { admin: true }),
-  createLegacy: (body: Partial<LegacyReview>) =>
-    request<{ entry: LegacyReview }>('/api/admin/legacy', { method: 'POST', body: JSON.stringify(body), admin: true }),
-  updateLegacy: (id: string, body: Partial<LegacyReview>) =>
-    request<{ entry: LegacyReview }>(`/api/admin/legacy/${id}`, { method: 'PATCH', body: JSON.stringify(body), admin: true }),
+  legacy: () => request<{ legacy: LegacyEntry[] }>('/api/admin/legacy', { admin: true }),
+  createLegacy: (body: Partial<LegacyEntry>) =>
+    request<{ entry: LegacyEntry }>('/api/admin/legacy', { method: 'POST', body: JSON.stringify(body), admin: true }),
+  updateLegacy: (id: string, body: Partial<LegacyEntry>) =>
+    request<{ entry: LegacyEntry }>(`/api/admin/legacy/${id}`, { method: 'PATCH', body: JSON.stringify(body), admin: true }),
   deleteLegacy: (id: string) =>
     request<{ deleted: boolean }>(`/api/admin/legacy/${id}`, { method: 'DELETE', admin: true }),
 
@@ -225,6 +225,20 @@ export const adminApi = {
       body: (() => {
         const form = new FormData();
         Array.from(files).forEach((file) => form.append('images', file));
+        return form;
+      })(),
+      admin: true,
+    }),
+  /**
+   * One gallery photo or video clip. Called once per file so a large video is
+   * never buffered together with the rest of the selection.
+   */
+  uploadMedia: (file: File) =>
+    request<{ media: { url: string }; url: string }>('/api/admin/uploads/media', {
+      method: 'POST',
+      body: (() => {
+        const form = new FormData();
+        form.append('file', file);
         return form;
       })(),
       admin: true,

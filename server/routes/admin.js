@@ -33,6 +33,25 @@ const upload = multer({
   },
 });
 
+/**
+ * Photos and video clips for the Our Legacy and Exhibitions galleries.
+ *
+ * One file per request on purpose: multer buffers the whole upload in memory
+ * before the handler runs, so a clip is streamed through only once — twelve
+ * videos in a single request would multiply that buffer by twelve and can
+ * exhaust a small instance. The dashboard uploads clips one at a time.
+ */
+const mediaUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 48 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    if (!/^image\/(jpeg|png|webp|avif|gif)$|^video\/(mp4|webm|quicktime|ogg)$/.test(file.mimetype)) {
+      return cb(new Error('Only JPEG, PNG, WEBP, AVIF or GIF photos and MP4, WEBM, MOV or OGG videos are allowed'));
+    }
+    cb(null, true);
+  },
+});
+
 adminRouter.post('/login', loginLimiter, async (req, res, next) => {
   try {
     const email = String(req.body?.email || '').toLowerCase().trim();
@@ -413,6 +432,26 @@ adminRouter.post('/uploads', requireAdmin, upload.array('images', 12), async (re
       saved.push(await saveImage({ buffer: file.buffer, originalname: file.originalname, mimetype: file.mimetype }));
     }
     res.status(201).json({ images: saved, urls: saved.map((item) => item.url) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * One gallery photo or video clip. Returns a single URL; the dashboard loops
+ * over the selected files so each upload is a separate, bounded request.
+ */
+adminRouter.post('/uploads/media', requireAdmin, mediaUpload.single('file'), async (req, res, next) => {
+  try {
+    const file = req.file;
+    if (!file) throw httpError(400, 'No file received');
+    const saved = await saveImage({
+      buffer: file.buffer,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      folder: 'media',
+    });
+    res.status(201).json({ media: saved, url: saved.url });
   } catch (error) {
     next(error);
   }

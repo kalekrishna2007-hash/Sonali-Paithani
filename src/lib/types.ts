@@ -45,26 +45,25 @@ export interface Collection {
   product_count: number;
 }
 
-/** "Our Legacy" — a personality photographed in a Paithani, with their review. */
-export interface LegacyReview {
+/**
+ * "Our Legacy" — one set of photos and video clips of personalities wearing a
+ * Paithani. Media only: no name, role or quote is stored or shown.
+ */
+export interface LegacyEntry {
   id: string;
-  celebrity_name: string;
-  title: string | null;
-  review: string | null;
-  image_url: string | null;
+  media: string[];
   sort_order: number;
   is_active: boolean;
   created_at?: string;
 }
 
-/** An exhibition the studio has shown at, with photos and a write-up. */
+/**
+ * An exhibition the studio has shown at — photos and video clips from the
+ * stall. Media only: no title, place or write-up.
+ */
 export interface Exhibition {
   id: string;
-  title: string;
-  location: string | null;
-  event_date: string | null;
-  description: string | null;
-  images: string[];
+  media: string[];
   sort_order: number;
   is_active: boolean;
   created_at?: string;

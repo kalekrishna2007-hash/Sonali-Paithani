@@ -16,7 +16,7 @@ your actual configuration and tells you exactly what is still unsafe.
 │                        ── /*      → dist/ (React storefront)  │
 │      │                                                       │
 │      ├─ Postgres   (enquiries, products, stock, settings)     │
-│      └─ Storage    (saree + celebrity + exhibition photos)    │
+│      └─ Storage    (saree + gallery photos & videos)         │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -227,8 +227,9 @@ Sign in at `https://your-domain.com/admin`, then:
       `https://your-domain.com/api/qr/upi.png?pa=<your-vpa>` and scan it with a
       UPI app — confirm the payee name shown is the shop
 - [ ] **Settings** → WhatsApp template: send yourself a test approval
-- [ ] **Our Legacy** and **Exhibitions**: replace the seeded placeholder entries
-      (the demo names and reviews are fictional) with real photos and text
+- [ ] **Our Legacy** and **Exhibitions**: delete the seeded placeholder sets and
+      upload the real photos and video clips (media only — no names or quotes are
+      published, so nothing about the people in them needs writing down)
 - [ ] Place one real enquiry end-to-end: storefront → dashboard → Approve →
       WhatsApp link opens with the message **and** a tappable payment QR
 - [ ] Upload a product photo, then **redeploy** and confirm the image still loads

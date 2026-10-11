@@ -523,44 +523,19 @@ tr.is-selected td { background: var(--cream); }
 .timeline li { display: grid; grid-template-columns: 14px 1fr; gap: 0.6rem; align-items: start; }
 .timeline__dot { width: 9px; height: 9px; margin-top: 0.4rem; border-radius: 999px; background: var(--gold); }
 
-/* ── Our Legacy ──────────────────────────────────────────────────────────── */
-.legacy-grid { display: grid; gap: clamp(2rem, 4vw, 3.2rem); }
-.legacy-card {
-  display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-  gap: clamp(1.2rem, 3vw, 2.8rem); align-items: center;
+/* ── Our Legacy & Exhibitions — photo and video walls ────────────────────── */
+.media-wall {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: clamp(0.5rem, 1.2vw, 0.9rem);
 }
-.legacy-card:nth-child(even) .legacy-card__media { order: 2; }
-.legacy-card__media {
-  position: relative; border-radius: var(--radius); overflow: hidden;
-  background: var(--cream-deep); aspect-ratio: 4 / 5; max-height: 34rem;
-  border: 1px solid var(--line);
+.media-wall__tile {
+  margin: 0; position: relative; overflow: hidden; aspect-ratio: 4 / 5;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--cream-deep);
 }
-.legacy-card__media img { width: 100%; height: 100%; object-fit: cover; }
-.legacy-card__body { display: grid; gap: 0.6rem; align-content: center; }
-.legacy-card__mark { font-family: var(--serif); font-size: 3.6rem; line-height: 0.5; color: var(--gold); }
-.legacy-card__quote {
-  font-family: var(--serif); font-size: clamp(1.05rem, 1.9vw, 1.45rem);
-  line-height: 1.5; color: var(--ink); margin: 0;
-}
-.legacy-card__name { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--maroon); }
-.legacy-card__role { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+.media-wall__media { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* A clip keeps its own frame, with the player controls drawn over it. */
+.media-wall__tile video.media-wall__media { background: #000; }
 .legacy-admin { display: grid; gap: 1rem; }
-
-/* ── Exhibitions ─────────────────────────────────────────────────────────── */
-.expo { display: grid; gap: 1.6rem; }
-.expo-card {
-  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-  border: 1px solid var(--line); border-radius: var(--radius); background: var(--ivory); overflow: hidden;
-}
-.expo-card__gallery { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; background: var(--line); }
-.expo-card__gallery img { width: 100%; height: 100%; min-height: 300px; object-fit: cover; }
-.expo-card__body { padding: clamp(1.2rem, 2.6vw, 2.1rem); display: grid; gap: 0.55rem; align-content: center; }
-.expo-card__meta {
-  display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; font-size: 0.7rem;
-  letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
-}
-.expo-card__meta span + span { position: relative; }
-.expo-card__meta span + span::before { content: '·'; position: absolute; left: -0.65rem; color: var(--gold); }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 1080px) {
@@ -574,9 +549,7 @@ tr.is-selected td { background: var(--cream); }
   .header__search { display: none; }
   .trust { grid-template-columns: repeat(2, 1fr); }
   .steps { grid-template-columns: 1fr; }
-  .legacy-card, .expo-card { grid-template-columns: 1fr; }
-  .legacy-card:nth-child(even) .legacy-card__media { order: 0; }
-  .expo-card__gallery img { min-height: 220px; }
+  .media-wall { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .admin { grid-template-columns: 1fr; }
   .admin__side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; }
   .admin__side .logo { margin: 0 1rem 0 0; }

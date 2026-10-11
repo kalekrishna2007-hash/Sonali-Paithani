@@ -31,12 +31,12 @@ publicRouter.get('/facets', async (_req, res) => {
   res.json(await productFacets());
 });
 
-/** Our Legacy — personalities photographed in a Paithani, with their review. */
+/** Our Legacy — photos and videos of personalities wearing a Paithani. */
 publicRouter.get('/legacy', async (_req, res) => {
   res.json({ legacy: await listLegacy() });
 });
 
-/** Exhibitions & shows the studio has taken part in. */
+/** Exhibitions — photos and videos from the shows the studio has taken part in. */
 publicRouter.get('/exhibitions', async (_req, res) => {
   res.json({ exhibitions: await listExhibitions() });
 });

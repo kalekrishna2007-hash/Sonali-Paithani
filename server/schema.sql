@@ -133,30 +133,47 @@ create table if not exists message_log (
 
 create index if not exists message_log_enquiry_idx on message_log (enquiry_id);
 
--- "Our Legacy": personalities photographed in a Paithani, with their review.
+-- "Our Legacy": photos and video clips of personalities wearing a Paithani.
+-- Media only — no name, role or quote is stored or published. `media` holds an
+-- array of public image/video URLs.
+-- The celebrity_name/title/review/image_url columns are unused leftovers kept
+-- only so databases created before this became a gallery keep matching this
+-- shape; the alters below add `media` to those databases and let the leftovers
+-- stay empty. Never read them — see services/content.js.
 create table if not exists legacy_reviews (
   id             text primary key,
-  celebrity_name text not null,
+  celebrity_name text,
   title          text,
   review         text,
   image_url      text,
+  media          jsonb not null default '[]',
   sort_order     integer not null default 0,
   is_active      boolean not null default true,
   created_at     timestamptz not null default now()
 );
 
--- Exhibitions the studio has shown at: title, place, photos and a write-up.
+-- Exhibitions the studio has shown at: photos and video clips from the stall.
+-- Media only — title/location/description/images are the same kind of unused
+-- leftovers as above.
 create table if not exists exhibitions (
   id          text primary key,
-  title       text not null,
+  title       text,
   location    text,
   event_date  text,
   description text,
   images      jsonb not null default '[]',
+  media       jsonb not null default '[]',
   sort_order  integer not null default 0,
   is_active   boolean not null default true,
   created_at  timestamptz not null default now()
 );
+
+-- Upgrades for databases created before these two sections became galleries.
+-- Both statements are idempotent, so they re-run harmlessly on every boot.
+alter table legacy_reviews add column if not exists media jsonb not null default '[]';
+alter table legacy_reviews alter column celebrity_name drop not null;
+alter table exhibitions add column if not exists media jsonb not null default '[]';
+alter table exhibitions alter column title drop not null;
 
 create table if not exists settings (
   key        text primary key,

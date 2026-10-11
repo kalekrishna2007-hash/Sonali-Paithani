@@ -235,89 +235,53 @@ export async function ensureCollections() {
   return count?.total || 0;
 }
 
-export const LEGACY_STORIES = [
-  {
-    celebrity_name: 'Meera Ranade',
-    title: 'Actor · Marathi stage & cinema',
-    review:
-      'I wore the peacock munni for our anniversary shoot and it moved like liquid gold. The zari catches every light on stage.',
-    image_url: '/images/paithani-1.svg',
-    sort_order: 1,
-  },
-  {
-    celebrity_name: 'Ananya Pradhan',
-    title: 'Classical dancer',
-    review:
-      'My guruji gifted me a Yeola Paithani at my arangetram. Twenty years on, it is still the saree I reach for on every big day.',
-    image_url: '/images/paithani-2.svg',
-    sort_order: 2,
-  },
-  {
-    celebrity_name: 'Kavya Deshmukh',
-    title: 'Television presenter',
-    review:
-      'The lotus buti bridal drape was made to my colour pairing. It is the most photographed thing I own.',
-    image_url: '/images/paithani-5.svg',
-    sort_order: 3,
-  },
+/*
+ * Both galleries are seeded as photos only. They are placeholders for the
+ * owner's own uploads, and deliberately carry no names, titles or quotes — the
+ * storefront never publishes anything about the people in them.
+ */
+export const LEGACY_MEDIA = [
+  { media: ['/images/paithani-1.svg', '/images/paithani-3.svg'], sort_order: 1 },
+  { media: ['/images/paithani-2.svg'], sort_order: 2 },
+  { media: ['/images/paithani-5.svg', '/images/paithani-4.svg'], sort_order: 3 },
 ];
 
-export const EXHIBITIONS = [
-  {
-    title: 'Yeola Handloom Utsav',
-    location: 'Yeola, Nashik',
-    event_date: 'February 2026',
-    description:
-      'Ten days on the loom-front at the town that gave Paithani its name — live weaving, zari tests and a bridal trousseau corner.',
-    images: ['/images/paithani-1.svg', '/images/paithani-3.svg'],
-    sort_order: 1,
-  },
-  {
-    title: 'Maharashtra Heritage Expo',
-    location: 'Pune',
-    event_date: 'November 2025',
-    description:
-      'Our family loom archive alongside commissioned bridal Paithanis, with a lecture-demonstration on kadiyal weaving.',
-    images: ['/images/paithani-2.svg', '/images/paithani-4.svg'],
-    sort_order: 2,
-  },
-  {
-    title: 'Silk Mark Pop-up',
-    location: 'Mumbai',
-    event_date: 'August 2025',
-    description: 'A weekend pop-up of signature sarees and brocade accessories, with on-site draping sessions.',
-    images: ['/images/paithani-6.svg', '/images/paithani-5.svg'],
-    sort_order: 3,
-  },
+export const EXHIBITION_MEDIA = [
+  { media: ['/images/paithani-1.svg', '/images/paithani-3.svg'], sort_order: 1 },
+  { media: ['/images/paithani-2.svg', '/images/paithani-4.svg'], sort_order: 2 },
+  { media: ['/images/paithani-6.svg', '/images/paithani-5.svg'], sort_order: 3 },
 ];
 
 /**
- * Seeds the two editorial sections once, so a fresh install shows a populated
- * "Our Legacy" and "Exhibitions" page. Everything here is editable from the
+ * Seeds the two galleries once, so a fresh install shows a populated "Our
+ * Legacy" and "Exhibitions" page. Everything here is replaced from the
  * dashboard — these are only starting points.
  */
 export async function ensureContent() {
   const [{ total: legacyCount }] = await q('select count(*)::int as total from legacy_reviews');
   if (!legacyCount) {
-    for (const entry of LEGACY_STORIES) {
+    for (const entry of LEGACY_MEDIA) {
       await q(
-        `insert into legacy_reviews (id, celebrity_name, title, review, image_url, sort_order, is_active)
-         values ($1,$2,$3,$4,$5,$6,true)`,
-        [newId(), entry.celebrity_name, entry.title, entry.review, entry.image_url, entry.sort_order],
+        `insert into legacy_reviews (id, media, sort_order, is_active)
+         values ($1,$2,$3,true)`,
+        [newId(), JSON.stringify(entry.media), entry.sort_order],
       );
     }
   }
   const [{ total: exhibitionCount }] = await q('select count(*)::int as total from exhibitions');
   if (!exhibitionCount) {
-    for (const entry of EXHIBITIONS) {
+    for (const entry of EXHIBITION_MEDIA) {
       await q(
-        `insert into exhibitions (id, title, location, event_date, description, images, sort_order, is_active)
-         values ($1,$2,$3,$4,$5,$6,$7,true)`,
-        [newId(), entry.title, entry.location, entry.event_date, entry.description, JSON.stringify(entry.images), entry.sort_order],
+        `insert into exhibitions (id, media, sort_order, is_active)
+         values ($1,$2,$3,true)`,
+        [newId(), JSON.stringify(entry.media), entry.sort_order],
       );
     }
   }
-  return { legacy: legacyCount ? 0 : LEGACY_STORIES.length, exhibitions: exhibitionCount ? 0 : EXHIBITIONS.length };
+  return {
+    legacy: legacyCount ? 0 : LEGACY_MEDIA.length,
+    exhibitions: exhibitionCount ? 0 : EXHIBITION_MEDIA.length,
+  };
 }
 
 export async function databaseSummary() {

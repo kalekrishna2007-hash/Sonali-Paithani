@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test, { after, before } from 'node:test';
-import { closeDb, initDb } from '../db.js';
-import { ensureAdminUser } from '../auth.js';
+import { closeDb, initDb, q } from '../db.js';
+import { ensureAdminUser, newId } from '../auth.js';
 import { ensureCollections, seedDemoData } from '../seed.js';
 import { createApp } from '../app.js';
 import { dbMode } from '../env.js';
@@ -51,16 +51,54 @@ test('storefront exposes collections and products', async () => {
   assert.ok(products.body.total >= 8);
 });
 
-test('storefront exposes the Our Legacy and Exhibitions sections', async () => {
+test('storefront exposes the Our Legacy and Exhibitions galleries', async () => {
   const legacy = await api('/api/legacy');
   assert.equal(legacy.status, 200);
   assert.ok(legacy.body.legacy.length >= 1);
-  assert.ok(legacy.body.legacy[0].celebrity_name);
+  assert.ok(Array.isArray(legacy.body.legacy[0].media));
+  assert.ok(legacy.body.legacy[0].media.length >= 1);
+  // Media only: nothing about the person is published.
+  assert.equal(legacy.body.legacy[0].celebrity_name, undefined);
+  assert.equal(legacy.body.legacy[0].review, undefined);
 
   const exhibitions = await api('/api/exhibitions');
   assert.equal(exhibitions.status, 200);
   assert.ok(exhibitions.body.exhibitions.length >= 1);
-  assert.ok(Array.isArray(exhibitions.body.exhibitions[0].images));
+  assert.ok(Array.isArray(exhibitions.body.exhibitions[0].media));
+  assert.ok(exhibitions.body.exhibitions[0].media.length >= 1);
+  assert.equal(exhibitions.body.exhibitions[0].title, undefined);
+});
+
+test('gallery media falls back to the photos stored by the old columns', async () => {
+  // Databases created before these sections became galleries still hold their
+  // media in celebrity_name/image_url (legacy) and images (exhibitions).
+  const legacyId = newId();
+  await q('insert into legacy_reviews (id, celebrity_name, image_url, sort_order) values ($1,$2,$3,$4)', [
+    legacyId,
+    'Old Row',
+    '/images/paithani-4.svg',
+    9,
+  ]);
+  const exhibitionId = newId();
+  await q('insert into exhibitions (id, title, images, sort_order) values ($1,$2,$3,$4)', [
+    exhibitionId,
+    'Old Show',
+    JSON.stringify(['/images/paithani-6.svg']),
+    9,
+  ]);
+
+  const legacy = await api('/api/legacy');
+  const legacyRow = legacy.body.legacy.find((row) => row.id === legacyId);
+  assert.deepEqual(legacyRow.media, ['/images/paithani-4.svg']);
+  assert.equal(legacyRow.celebrity_name, undefined);
+
+  const exhibitions = await api('/api/exhibitions');
+  const exhibitionRow = exhibitions.body.exhibitions.find((row) => row.id === exhibitionId);
+  assert.deepEqual(exhibitionRow.media, ['/images/paithani-6.svg']);
+  assert.equal(exhibitionRow.title, undefined);
+
+  await q('delete from legacy_reviews where id = $1', [legacyId]);
+  await q('delete from exhibitions where id = $1', [exhibitionId]);
 });
 
 test('product detail 404s for an unknown slug', async () => {
@@ -347,51 +385,54 @@ test('customer can check enquiry status with reference and phone', async () => {
   assert.equal(wrongPhone.status, 404);
 });
 
-test('admin manages legacy entries and exhibitions', async () => {
+test('admin manages the legacy and exhibition galleries', async () => {
   const createdLegacy = await api('/api/admin/legacy', {
     method: 'POST',
-    body: JSON.stringify({ celebrity_name: 'Test Personality', title: 'Actor', review: 'Wore the peacock munni.', image_url: '/images/paithani-1.svg' }),
+    body: JSON.stringify({ media: ['/images/paithani-1.svg', '/uploads/clip.mp4'] }),
   });
   assert.equal(createdLegacy.status, 201);
   const legacyId = createdLegacy.body.entry.id;
   assert.equal(createdLegacy.body.entry.is_active, true);
+  assert.deepEqual(createdLegacy.body.entry.media, ['/images/paithani-1.svg', '/uploads/clip.mp4']);
 
-  // A review with no name is refused.
-  const nameless = await api('/api/admin/legacy', { method: 'POST', body: JSON.stringify({ review: 'no name' }) });
-  assert.equal(nameless.status, 400);
+  // A set with nothing to show is refused.
+  const empty = await api('/api/admin/legacy', { method: 'POST', body: JSON.stringify({ media: [] }) });
+  assert.equal(empty.status, 400);
 
+  const reordered = await api(`/api/admin/legacy/${legacyId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ media: ['/images/paithani-3.svg'], sort_order: 7 }),
+  });
+  assert.equal(reordered.status, 200);
+  assert.deepEqual(reordered.body.entry.media, ['/images/paithani-3.svg']);
+  assert.equal(reordered.body.entry.sort_order, 7);
+
+  // Hiding a set must not touch its media.
   const hidden = await api(`/api/admin/legacy/${legacyId}`, {
     method: 'PATCH',
-    body: JSON.stringify({ is_active: false, title: 'Film actor' }),
+    body: JSON.stringify({ is_active: false }),
   });
   assert.equal(hidden.status, 200);
   assert.equal(hidden.body.entry.is_active, false);
-  assert.equal(hidden.body.entry.title, 'Film actor');
+  assert.deepEqual(hidden.body.entry.media, ['/images/paithani-3.svg']);
 
   const publicLegacy = await api('/api/legacy');
   assert.ok(!publicLegacy.body.legacy.some((row) => row.id === legacyId), 'hidden entries leave the storefront');
 
   const createdShow = await api('/api/admin/exhibitions', {
     method: 'POST',
-    body: JSON.stringify({
-      title: 'Test Handloom Expo',
-      location: 'Nashik',
-      event_date: 'March 2026',
-      description: 'A test showcase.',
-      images: ['/images/paithani-2.svg', '/images/paithani-3.svg'],
-    }),
+    body: JSON.stringify({ media: ['/images/paithani-2.svg', '/uploads/stall.mp4'] }),
   });
   assert.equal(createdShow.status, 201);
-  assert.deepEqual(createdShow.body.exhibition.images, ['/images/paithani-2.svg', '/images/paithani-3.svg']);
+  assert.deepEqual(createdShow.body.exhibition.media, ['/images/paithani-2.svg', '/uploads/stall.mp4']);
   const showId = createdShow.body.exhibition.id;
 
   const updatedShow = await api(`/api/admin/exhibitions/${showId}`, {
     method: 'PATCH',
-    body: JSON.stringify({ location: 'Pune', images: ['/images/paithani-2.svg'] }),
+    body: JSON.stringify({ media: ['/images/paithani-2.svg'] }),
   });
   assert.equal(updatedShow.status, 200);
-  assert.equal(updatedShow.body.exhibition.location, 'Pune');
-  assert.deepEqual(updatedShow.body.exhibition.images, ['/images/paithani-2.svg']);
+  assert.deepEqual(updatedShow.body.exhibition.media, ['/images/paithani-2.svg']);
 
   const publicShows = await api('/api/exhibitions');
   assert.ok(publicShows.body.exhibitions.some((row) => row.id === showId), 'a live exhibition reaches the storefront');

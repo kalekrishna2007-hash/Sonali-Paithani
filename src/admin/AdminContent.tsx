@@ -2,71 +2,126 @@ import { useState } from 'react';
 import { adminApi } from '../lib/api';
 import { useAsync } from '../lib/useAsync';
 import { useApp } from '../lib/store';
-import type { Exhibition, LegacyReview } from '../lib/types';
+import type { Exhibition, LegacyEntry } from '../lib/types';
+import { MediaThumb } from '../components/MediaGallery';
 import { CloseIcon, EditIcon, PlusIcon, TrashIcon, UploadIcon } from '../components/icons';
 
-/**
- * One upload control for every image field on this screen. Files go through the
- * same /api/admin/uploads route the product form uses, so storage (Supabase or
- * local /uploads) is decided in one place.
- */
-function UploadButton({ onUploaded, label = 'Upload image' }: { onUploaded: (urls: string[]) => void; label?: string }) {
-  const { notify } = useApp();
-  const [uploading, setUploading] = useState(false);
+/** How many photos and clips one gallery set can hold. Kept in step with the
+ *  server-side cap in services/content.js. */
+const MAX_MEDIA = 24;
 
-  return (
-    <label className="btn btn--outline btn--sm" style={{ cursor: 'pointer' }}>
-      <UploadIcon size={15} /> {uploading ? 'Uploading…' : label}
-      <input
-        type="file"
-        accept="image/*"
-        multiple
-        hidden
-        disabled={uploading}
-        onChange={async (event) => {
-          const files = event.target.files;
-          if (!files?.length) return;
-          setUploading(true);
-          try {
-            const result = await adminApi.upload(files);
-            onUploaded(result.urls);
-            notify(`${result.urls.length} image${result.urls.length > 1 ? 's' : ''} uploaded`, 'success');
-          } catch (error) {
-            notify(error instanceof Error ? error.message : 'Upload failed', 'error');
-          } finally {
-            setUploading(false);
-            event.target.value = '';
-          }
-        }}
-      />
-    </label>
-  );
+type GalleryEntry = LegacyEntry | Exhibition;
+type GallerySection = 'legacy' | 'exhibitions';
+
+type GalleryEndpoints = {
+  list: () => Promise<GalleryEntry[]>;
+  create: (body: Partial<GalleryEntry>) => Promise<unknown>;
+  update: (id: string, body: Partial<GalleryEntry>) => Promise<unknown>;
+  remove: (id: string) => Promise<unknown>;
+};
+
+/**
+ * Both storefront galleries are media-only, so they share one screen. The only
+ * difference is the wording and which endpoint pair is called.
+ */
+const COPY: Record<GallerySection, {
+  eyebrow: string;
+  heading: string;
+  help: string;
+  empty: string;
+  add: string;
+  newLabel: string;
+}> = {
+  legacy: {
+    eyebrow: 'Our Legacy',
+    heading: 'Photos & videos',
+    help:
+      'Upload photographs and video clips of personalities wearing a Paithani. Only the media is published — no name, role or quote is ever collected or shown.',
+    empty: 'Add the first photos or clips that should appear on the Our Legacy page.',
+    add: 'Add photos & videos',
+    newLabel: 'New legacy set',
+  },
+  exhibitions: {
+    eyebrow: 'Exhibitions',
+    heading: 'Photos & videos',
+    help:
+      'Upload photographs and video clips from exhibitions, expos and pop-ups. Only the media is published — no title, place or write-up is attached.',
+    empty: 'Add the first photos or clips that should appear on the Exhibitions page.',
+    add: 'Add photos & videos',
+    newLabel: 'New exhibition set',
+  },
+};
+
+const ENDPOINTS: Record<GallerySection, GalleryEndpoints> = {
+  legacy: {
+    list: async () => (await adminApi.legacy()).legacy,
+    create: (body) => adminApi.createLegacy(body),
+    update: (id, body) => adminApi.updateLegacy(id, body),
+    remove: (id) => adminApi.deleteLegacy(id),
+  },
+  exhibitions: {
+    list: async () => (await adminApi.exhibitions()).exhibitions,
+    create: (body) => adminApi.createExhibition(body),
+    update: (id, body) => adminApi.updateExhibition(id, body),
+    remove: (id) => adminApi.deleteExhibition(id),
+  },
+};
+
+/**
+ * Uploads the chosen files and returns the URLs to keep.
+ *
+ * Photos go up in one batch through the image route; video clips go one file per
+ * request, because the server buffers an upload in memory before storing it and
+ * a dozen clips at once would multiply that buffer.
+ */
+async function uploadSelection(files: FileList | File[]) {
+  const all = Array.from(files);
+  const photos = all.filter((file) => !file.type.startsWith('video/'));
+  const videos = all.filter((file) => file.type.startsWith('video/'));
+  const urls: string[] = [];
+  // The image route takes at most twelve files per request.
+  for (let index = 0; index < photos.length; index += 12) {
+    urls.push(...(await adminApi.upload(photos.slice(index, index + 12))).urls);
+  }
+  for (const video of videos) urls.push((await adminApi.uploadMedia(video)).url);
+  return urls;
 }
 
-/* ─── Our Legacy ───────────────────────────────────────────────────────── */
-
 export function AdminLegacy() {
-  const { notify } = useApp();
-  const [editing, setEditing] = useState<LegacyReview | null>(null);
-  const [creating, setCreating] = useState(false);
-  const { data, loading, reload } = useAsync(() => adminApi.legacy(), []);
-  const entries = data?.legacy || [];
+  return <AdminGallery section="legacy" />;
+}
 
-  const toggle = async (entry: LegacyReview) => {
+export function AdminExhibitions() {
+  return <AdminGallery section="exhibitions" />;
+}
+
+function AdminGallery({ section }: { section: GallerySection }) {
+  const { notify } = useApp();
+  const copy = COPY[section];
+  const endpoints = ENDPOINTS[section];
+  const [editing, setEditing] = useState<GalleryEntry | null>(null);
+  const [creating, setCreating] = useState(false);
+  const { data, loading, reload } = useAsync(() => endpoints.list(), [section]);
+  const entries = data || [];
+
+  const countLabel = (entry: GalleryEntry) =>
+    `${entry.media.length} photo${entry.media.length === 1 ? '' : 's'}/clip${entry.media.length === 1 ? '' : 's'}`;
+
+  const toggle = async (entry: GalleryEntry) => {
     try {
-      await adminApi.updateLegacy(entry.id, { is_active: !entry.is_active });
-      notify(entry.is_active ? `${entry.celebrity_name} hidden from the site` : `${entry.celebrity_name} is live`, 'success');
+      await endpoints.update(entry.id, { is_active: !entry.is_active });
+      notify(entry.is_active ? 'Set hidden from the site' : 'Set is live', 'success');
       reload();
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not update', 'error');
     }
   };
 
-  const remove = async (entry: LegacyReview) => {
-    if (!window.confirm(`Delete the ${entry.celebrity_name} entry? This cannot be undone.`)) return;
+  const remove = async (entry: GalleryEntry) => {
+    if (!window.confirm(`Delete these ${countLabel(entry)}? This cannot be undone.`)) return;
     try {
-      await adminApi.deleteLegacy(entry.id);
-      notify('Entry deleted', 'success');
+      await endpoints.remove(entry.id);
+      notify('Set deleted', 'success');
       reload();
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not delete', 'error');
@@ -77,52 +132,57 @@ export function AdminLegacy() {
     <>
       <div className="admin__topbar">
         <div>
-          <span className="eyebrow">Our Legacy</span>
-          <h1>Personalities &amp; reviews</h1>
+          <span className="eyebrow">{copy.eyebrow}</span>
+          <h1>{copy.heading}</h1>
         </div>
         <button className="btn btn--sm" onClick={() => setCreating(true)}>
-          <PlusIcon size={14} /> Add personality
+          <PlusIcon size={14} /> {copy.add}
         </button>
       </div>
 
       <p className="help" style={{ marginBottom: '1.2rem' }}>
-        Add a photo of a personality wearing a Paithani along with their review. Everything here appears on the
-        storefront <strong>Our Legacy</strong> page, in the order set below.
+        {copy.help} Everything here appears on the storefront <strong>{copy.eyebrow}</strong> page, in the order set
+        below.
       </p>
 
       {loading && <div className="skeleton" style={{ height: '220px' }} />}
 
       {!loading && !entries.length && (
         <div className="empty">
-          <h3>No personalities yet</h3>
-          <p className="muted">Add the first photograph and review to start the Our Legacy page.</p>
-          <button className="btn" onClick={() => setCreating(true)}>Add personality</button>
+          <h3>Nothing uploaded yet</h3>
+          <p className="muted">{copy.empty}</p>
+          <button className="btn" onClick={() => setCreating(true)}>
+            {copy.add}
+          </button>
         </div>
       )}
 
       <div className="legacy-admin">
         {entries.map((entry) => (
           <div className="card" key={entry.id}>
-            <div className="row" style={{ gap: '1rem', alignItems: 'flex-start' }}>
-              <img
-                className="thumb"
-                style={{ width: '72px', height: '90px' }}
-                src={entry.image_url || '/images/paithani-1.svg'}
-                alt=""
-              />
-              <div style={{ minWidth: 0 }}>
+            <div className="row row--wrap" style={{ gap: '1rem', alignItems: 'flex-start' }}>
+              <div className="row" style={{ gap: '0.4rem' }}>
+                {(entry.media.length ? entry.media : ['/images/paithani-1.svg'])
+                  .slice(0, 3)
+                  .map((url, index) => (
+                    <MediaThumb
+                      key={`${entry.id}-${index}`}
+                      url={url}
+                      className="thumb"
+                      style={{ width: '68px', height: '86px' }}
+                    />
+                  ))}
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
                 <div className="row row--wrap" style={{ gap: '0.4rem' }}>
-                  <strong>{entry.celebrity_name}</strong>
+                  <strong>{countLabel(entry)}</strong>
                   <span className={`badge badge--${entry.is_active ? 'approved' : 'muted'}`}>
                     {entry.is_active ? 'live' : 'hidden'}
                   </span>
                   <span className="badge badge--muted">#{entry.sort_order}</span>
                 </div>
-                {entry.title && <div className="muted small">{entry.title}</div>}
-                {entry.review && (
-                  <p className="muted small" style={{ margin: '0.4rem 0 0' }}>
-                    {entry.review.length > 160 ? `${entry.review.slice(0, 160)}…` : entry.review}
-                  </p>
+                {entry.media.length > 3 && (
+                  <div className="muted small">and {entry.media.length - 3} more</div>
                 )}
               </div>
               <div className="table-actions" style={{ marginLeft: 'auto' }}>
@@ -142,7 +202,8 @@ export function AdminLegacy() {
       </div>
 
       {(creating || editing) && (
-        <LegacyForm
+        <GalleryForm
+          section={section}
           entry={editing}
           onClose={() => {
             setCreating(false);
@@ -159,293 +220,30 @@ export function AdminLegacy() {
   );
 }
 
-function LegacyForm({ entry, onClose, onSaved }: { entry: LegacyReview | null; onClose: () => void; onSaved: () => void }) {
+function GalleryForm({
+  section,
+  entry,
+  onClose,
+  onSaved,
+}: {
+  section: GallerySection;
+  entry: GalleryEntry | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
   const { notify } = useApp();
-  const [form, setForm] = useState({
-    celebrity_name: entry?.celebrity_name || '',
-    title: entry?.title || '',
-    review: entry?.review || '',
-    sort_order: entry?.sort_order ?? 0,
-    is_active: entry?.is_active ?? true,
-  });
-  const [imageUrl, setImageUrl] = useState(entry?.image_url || '');
+  const copy = COPY[section];
+  const endpoints = ENDPOINTS[section];
+  const [media, setMedia] = useState<string[]>(entry?.media || []);
+  const [sortOrder, setSortOrder] = useState(entry?.sort_order ?? 0);
+  const [isActive, setIsActive] = useState(entry?.is_active ?? true);
   const [pasted, setPasted] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  const save = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setError('');
-    if (form.celebrity_name.trim().length < 2) return setError('Add the name of the personality');
-    setSaving(true);
-    try {
-      const payload = { ...form, sort_order: Number(form.sort_order) || 0, image_url: imageUrl || null };
-      if (entry) await adminApi.updateLegacy(entry.id, payload);
-      else await adminApi.createLegacy(payload);
-      notify(entry ? 'Entry updated' : 'Entry added', 'success');
-      onSaved();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save the entry');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <>
-      <button className="dialog__scrim" aria-label="Close" onClick={onClose} />
-      <div className="dialog dialog--wide" role="dialog" aria-modal="true" aria-label={entry ? 'Edit entry' : 'Add entry'}>
-        <form onSubmit={save}>
-          <div className="dialog__head">
-            <div>
-              <span className="eyebrow">{entry ? 'Edit' : 'New'} legacy entry</span>
-              <h3>{entry ? entry.celebrity_name : 'Add a personality and their review'}</h3>
-            </div>
-            <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
-              <CloseIcon />
-            </button>
-          </div>
-
-          <div className="dialog__body">
-            <div className="form-grid">
-              <label className="field">
-                <span>Name *</span>
-                <input
-                  className="input"
-                  value={form.celebrity_name}
-                  onChange={(event) => setForm({ ...form, celebrity_name: event.target.value })}
-                  placeholder="Actor / dancer / presenter"
-                  required
-                />
-              </label>
-              <label className="field">
-                <span>Title or role</span>
-                <input
-                  className="input"
-                  value={form.title}
-                  onChange={(event) => setForm({ ...form, title: event.target.value })}
-                  placeholder="Actor · Marathi cinema"
-                />
-              </label>
-              <label className="field field--full">
-                <span>Review / what they said</span>
-                <textarea
-                  className="textarea"
-                  value={form.review}
-                  onChange={(event) => setForm({ ...form, review: event.target.value })}
-                  placeholder="I wore the peacock munni for our anniversary shoot…"
-                />
-              </label>
-            </div>
-
-            <div style={{ marginTop: '1.4rem' }}>
-              <span className="eyebrow">Photograph</span>
-              <div className="row row--wrap" style={{ marginBottom: '0.8rem' }}>
-                <UploadButton onUploaded={(urls) => setImageUrl(urls[0])} label="Upload photo" />
-                <input
-                  className="input"
-                  style={{ flex: 1, minWidth: '200px' }}
-                  value={pasted}
-                  onChange={(event) => setPasted(event.target.value)}
-                  placeholder="…or paste an image URL"
-                />
-                <button
-                  type="button"
-                  className="btn btn--outline btn--sm"
-                  onClick={() => {
-                    if (!pasted.trim()) return;
-                    setImageUrl(pasted.trim());
-                    setPasted('');
-                  }}
-                >
-                  Use URL
-                </button>
-              </div>
-              {imageUrl ? (
-                <div style={{ position: 'relative', width: '120px' }}>
-                  <img className="thumb" style={{ width: '120px', height: '150px' }} src={imageUrl} alt="" />
-                  <button
-                    type="button"
-                    className="icon-btn"
-                    style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.55)', color: '#fff', borderRadius: 999 }}
-                    onClick={() => setImageUrl('')}
-                    aria-label="Remove photo"
-                  >
-                    <TrashIcon size={14} />
-                  </button>
-                </div>
-              ) : (
-                <p className="help">No photograph yet — the storefront will use a saree image as a fallback.</p>
-              )}
-            </div>
-
-            <div className="row row--wrap" style={{ marginTop: '1.4rem', gap: '1.4rem' }}>
-              <label className="field">
-                <span>Display order</span>
-                <input
-                  className="input"
-                  type="number"
-                  value={form.sort_order}
-                  onChange={(event) => setForm({ ...form, sort_order: Number(event.target.value) })}
-                />
-              </label>
-              <label className="row" style={{ gap: '0.4rem', alignSelf: 'end' }}>
-                <input
-                  type="checkbox"
-                  checked={form.is_active}
-                  onChange={(event) => setForm({ ...form, is_active: event.target.checked })}
-                />
-                <span className="small">Show on the storefront</span>
-              </label>
-            </div>
-
-            {error && <p className="field__error" style={{ marginTop: '1rem' }}>{error}</p>}
-          </div>
-
-          <div className="dialog__foot">
-            <button type="button" className="btn btn--outline" onClick={onClose}>Cancel</button>
-            <button className="btn" type="submit" disabled={saving}>
-              {saving ? 'Saving…' : entry ? 'Save changes' : 'Add entry'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </>
-  );
-}
-
-/* ─── Exhibitions ──────────────────────────────────────────────────────── */
-
-export function AdminExhibitions() {
-  const { notify } = useApp();
-  const [editing, setEditing] = useState<Exhibition | null>(null);
-  const [creating, setCreating] = useState(false);
-  const { data, loading, reload } = useAsync(() => adminApi.exhibitions(), []);
-  const shows = data?.exhibitions || [];
-
-  const toggle = async (show: Exhibition) => {
-    try {
-      await adminApi.updateExhibition(show.id, { is_active: !show.is_active });
-      notify(show.is_active ? `${show.title} hidden from the site` : `${show.title} is live`, 'success');
-      reload();
-    } catch (error) {
-      notify(error instanceof Error ? error.message : 'Could not update', 'error');
-    }
-  };
-
-  const remove = async (show: Exhibition) => {
-    if (!window.confirm(`Delete "${show.title}"? This cannot be undone.`)) return;
-    try {
-      await adminApi.deleteExhibition(show.id);
-      notify('Exhibition deleted', 'success');
-      reload();
-    } catch (error) {
-      notify(error instanceof Error ? error.message : 'Could not delete', 'error');
-    }
-  };
-
-  return (
-    <>
-      <div className="admin__topbar">
-        <div>
-          <span className="eyebrow">Exhibitions</span>
-          <h1>Shows &amp; expos</h1>
-        </div>
-        <button className="btn btn--sm" onClick={() => setCreating(true)}>
-          <PlusIcon size={14} /> Add exhibition
-        </button>
-      </div>
-
-      <p className="help" style={{ marginBottom: '1.2rem' }}>
-        Record every exhibition with its title, location, date, a short description and photographs. Published entries
-        appear on the storefront <strong>Exhibitions</strong> page.
-      </p>
-
-      {loading && <div className="skeleton" style={{ height: '220px' }} />}
-
-      {!loading && !shows.length && (
-        <div className="empty">
-          <h3>No exhibitions yet</h3>
-          <p className="muted">Add your first exhibition to start this page.</p>
-          <button className="btn" onClick={() => setCreating(true)}>Add exhibition</button>
-        </div>
-      )}
-
-      {shows.map((show) => (
-        <div className="card" key={show.id}>
-          <div className="row row--wrap" style={{ gap: '1rem', alignItems: 'flex-start' }}>
-            <div className="row" style={{ gap: '0.4rem' }}>
-              {(show.images.length ? show.images : ['/images/paithani-1.svg']).slice(0, 3).map((image, index) => (
-                <img key={`${show.id}-${index}`} className="thumb" style={{ width: '60px', height: '76px' }} src={image} alt="" />
-              ))}
-            </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div className="row row--wrap" style={{ gap: '0.4rem' }}>
-                <strong>{show.title}</strong>
-                <span className={`badge badge--${show.is_active ? 'approved' : 'muted'}`}>
-                  {show.is_active ? 'live' : 'hidden'}
-                </span>
-                <span className="badge badge--muted">#{show.sort_order}</span>
-              </div>
-              <div className="muted small">
-                {[show.location, show.event_date].filter(Boolean).join(' · ') || 'No location set'}
-              </div>
-              {show.description && (
-                <p className="muted small" style={{ margin: '0.4rem 0 0' }}>
-                  {show.description.length > 180 ? `${show.description.slice(0, 180)}…` : show.description}
-                </p>
-              )}
-            </div>
-            <div className="table-actions" style={{ marginLeft: 'auto' }}>
-              <button className="btn btn--outline btn--sm" onClick={() => setEditing(show)}>
-                <EditIcon size={13} /> Edit
-              </button>
-              <button className="btn btn--outline btn--sm" onClick={() => toggle(show)}>
-                {show.is_active ? 'Hide' : 'Publish'}
-              </button>
-              <button className="btn btn--danger btn--sm" onClick={() => remove(show)}>
-                <TrashIcon size={13} /> Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      ))}
-
-      {(creating || editing) && (
-        <ExhibitionForm
-          exhibition={editing}
-          onClose={() => {
-            setCreating(false);
-            setEditing(null);
-          }}
-          onSaved={() => {
-            setCreating(false);
-            setEditing(null);
-            reload();
-          }}
-        />
-      )}
-    </>
-  );
-}
-
-function ExhibitionForm({ exhibition, onClose, onSaved }: { exhibition: Exhibition | null; onClose: () => void; onSaved: () => void }) {
-  const { notify } = useApp();
-  const [form, setForm] = useState({
-    title: exhibition?.title || '',
-    location: exhibition?.location || '',
-    event_date: exhibition?.event_date || '',
-    description: exhibition?.description || '',
-    sort_order: exhibition?.sort_order ?? 0,
-    is_active: exhibition?.is_active ?? true,
-  });
-  const [images, setImages] = useState<string[]>(exhibition?.images || []);
-  const [pasted, setPasted] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   const move = (index: number, direction: -1 | 1) => {
-    setImages((current) => {
+    setMedia((current) => {
       const next = [...current];
       const target = index + direction;
       if (target < 0 || target >= next.length) return current;
@@ -454,19 +252,34 @@ function ExhibitionForm({ exhibition, onClose, onSaved }: { exhibition: Exhibiti
     });
   };
 
+  const pickFiles = async (files: FileList | null) => {
+    if (!files?.length) return;
+    setError('');
+    setUploading(true);
+    try {
+      const urls = await uploadSelection(files);
+      setMedia((current) => [...current, ...urls].slice(0, MAX_MEDIA));
+      notify(`${urls.length} file${urls.length === 1 ? '' : 's'} uploaded`, 'success');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
-    if (form.title.trim().length < 2) return setError('Give the exhibition a title');
+    if (!media.length) return setError('Add at least one photo or video');
     setSaving(true);
     try {
-      const payload = { ...form, sort_order: Number(form.sort_order) || 0, images };
-      if (exhibition) await adminApi.updateExhibition(exhibition.id, payload);
-      else await adminApi.createExhibition(payload);
-      notify(exhibition ? 'Exhibition updated' : 'Exhibition added', 'success');
+      const payload = { media, sort_order: Number(sortOrder) || 0, is_active: isActive };
+      if (entry) await endpoints.update(entry.id, payload);
+      else await endpoints.create(payload);
+      notify(entry ? 'Set updated' : 'Set added', 'success');
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save the exhibition');
+      setError(err instanceof Error ? err.message : 'Could not save');
     } finally {
       setSaving(false);
     }
@@ -475,12 +288,12 @@ function ExhibitionForm({ exhibition, onClose, onSaved }: { exhibition: Exhibiti
   return (
     <>
       <button className="dialog__scrim" aria-label="Close" onClick={onClose} />
-      <div className="dialog dialog--wide" role="dialog" aria-modal="true" aria-label={exhibition ? 'Edit exhibition' : 'Add exhibition'}>
+      <div className="dialog dialog--wide" role="dialog" aria-modal="true" aria-label={entry ? 'Edit set' : 'Add set'}>
         <form onSubmit={save}>
           <div className="dialog__head">
             <div>
-              <span className="eyebrow">{exhibition ? 'Edit' : 'New'} exhibition</span>
-              <h3>{exhibition ? exhibition.title : 'Add an exhibition'}</h3>
+              <span className="eyebrow">{entry ? 'Edit' : copy.newLabel}</span>
+              <h3>{copy.add}</h3>
             </div>
             <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
               <CloseIcon />
@@ -488,97 +301,71 @@ function ExhibitionForm({ exhibition, onClose, onSaved }: { exhibition: Exhibiti
           </div>
 
           <div className="dialog__body">
-            <div className="form-grid">
-              <label className="field field--full">
-                <span>Title *</span>
+            <span className="eyebrow">Photos &amp; videos</span>
+            <p className="help">
+              Photos up to 8 MB, video clips up to 48 MB. Up to {MAX_MEDIA} items per set; they appear on the
+              storefront in the order below.
+            </p>
+
+            <div className="row row--wrap" style={{ marginBottom: '0.8rem' }}>
+              <label className="btn btn--outline btn--sm" style={{ cursor: 'pointer' }}>
+                <UploadIcon size={15} /> {uploading ? 'Uploading…' : 'Upload photos & videos'}
                 <input
-                  className="input"
-                  value={form.title}
-                  onChange={(event) => setForm({ ...form, title: event.target.value })}
-                  placeholder="Yeola Handloom Utsav"
-                  required
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  hidden
+                  disabled={uploading}
+                  onChange={(event) => pickFiles(event.target.files)}
                 />
               </label>
-              <label className="field">
-                <span>Location</span>
-                <input
-                  className="input"
-                  value={form.location}
-                  onChange={(event) => setForm({ ...form, location: event.target.value })}
-                  placeholder="Yeola, Nashik"
-                />
-              </label>
-              <label className="field">
-                <span>Date or period</span>
-                <input
-                  className="input"
-                  value={form.event_date}
-                  onChange={(event) => setForm({ ...form, event_date: event.target.value })}
-                  placeholder="February 2026"
-                />
-              </label>
-              <label className="field field--full">
-                <span>Description</span>
-                <textarea
-                  className="textarea"
-                  value={form.description}
-                  onChange={(event) => setForm({ ...form, description: event.target.value })}
-                  placeholder="Ten days on the loom-front at the town that gave Paithani its name…"
-                />
-              </label>
+              <input
+                className="input"
+                style={{ flex: 1, minWidth: '200px' }}
+                value={pasted}
+                onChange={(event) => setPasted(event.target.value)}
+                placeholder="…or paste a photo or video URL"
+              />
+              <button
+                type="button"
+                className="btn btn--outline btn--sm"
+                onClick={() => {
+                  if (!pasted.trim()) return;
+                  setMedia((current) => [...current, pasted.trim()].slice(0, MAX_MEDIA));
+                  setPasted('');
+                }}
+              >
+                Add URL
+              </button>
             </div>
 
-            <div style={{ marginTop: '1.4rem' }}>
-              <span className="eyebrow">Photographs</span>
-              <p className="help">First photo is the cover. Up to three are shown together on the storefront.</p>
-
-              <div className="row row--wrap" style={{ marginBottom: '0.8rem' }}>
-                <UploadButton onUploaded={(urls) => setImages((current) => [...current, ...urls])} label="Upload photos" />
-                <input
-                  className="input"
-                  style={{ flex: 1, minWidth: '200px' }}
-                  value={pasted}
-                  onChange={(event) => setPasted(event.target.value)}
-                  placeholder="…or paste an image URL"
-                />
-                <button
-                  type="button"
-                  className="btn btn--outline btn--sm"
-                  onClick={() => {
-                    if (!pasted.trim()) return;
-                    setImages((current) => [...current, pasted.trim()]);
-                    setPasted('');
-                  }}
-                >
-                  Add URL
-                </button>
-              </div>
-
-              {images.length ? (
-                <div className="row row--wrap" style={{ gap: '0.7rem' }}>
-                  {images.map((image, index) => (
-                    <div key={`${image}-${index}`} style={{ position: 'relative', width: '92px' }}>
-                      <img className="thumb" style={{ width: '92px', height: '116px' }} src={image} alt="" />
-                      {index === 0 && <span className="badge badge--muted" style={{ position: 'absolute', top: 4, left: 4 }}>cover</span>}
-                      <div className="row" style={{ gap: '0.2rem', marginTop: '0.3rem' }}>
-                        <button type="button" className="icon-btn" onClick={() => move(index, -1)} aria-label="Move left">←</button>
-                        <button type="button" className="icon-btn" onClick={() => move(index, 1)} aria-label="Move right">→</button>
-                        <button
-                          type="button"
-                          className="icon-btn"
-                          onClick={() => setImages((current) => current.filter((_, position) => position !== index))}
-                          aria-label="Remove photo"
-                        >
-                          <TrashIcon size={14} />
-                        </button>
-                      </div>
+            {media.length ? (
+              <div className="row row--wrap" style={{ gap: '0.7rem' }}>
+                {media.map((url, index) => (
+                  <div key={`${url}-${index}`} style={{ position: 'relative', width: '92px' }}>
+                    <MediaThumb url={url} className="thumb" style={{ width: '92px', height: '116px' }} />
+                    <div className="row" style={{ gap: '0.2rem', marginTop: '0.3rem' }}>
+                      <button type="button" className="icon-btn" onClick={() => move(index, -1)} aria-label="Move left">
+                        ←
+                      </button>
+                      <button type="button" className="icon-btn" onClick={() => move(index, 1)} aria-label="Move right">
+                        →
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        onClick={() => setMedia((current) => current.filter((_, position) => position !== index))}
+                        aria-label="Remove"
+                      >
+                        <TrashIcon size={14} />
+                      </button>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="help">No photographs yet — add at least one before publishing.</p>
-              )}
-            </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="help">Nothing added yet — at least one photo or video is needed before publishing.</p>
+            )}
 
             <div className="row row--wrap" style={{ marginTop: '1.4rem', gap: '1.4rem' }}>
               <label className="field">
@@ -586,15 +373,15 @@ function ExhibitionForm({ exhibition, onClose, onSaved }: { exhibition: Exhibiti
                 <input
                   className="input"
                   type="number"
-                  value={form.sort_order}
-                  onChange={(event) => setForm({ ...form, sort_order: Number(event.target.value) })}
+                  value={sortOrder}
+                  onChange={(event) => setSortOrder(Number(event.target.value))}
                 />
               </label>
               <label className="row" style={{ gap: '0.4rem', alignSelf: 'end' }}>
                 <input
                   type="checkbox"
-                  checked={form.is_active}
-                  onChange={(event) => setForm({ ...form, is_active: event.target.checked })}
+                  checked={isActive}
+                  onChange={(event) => setIsActive(event.target.checked)}
                 />
                 <span className="small">Show on the storefront</span>
               </label>
@@ -604,9 +391,11 @@ function ExhibitionForm({ exhibition, onClose, onSaved }: { exhibition: Exhibiti
           </div>
 
           <div className="dialog__foot">
-            <button type="button" className="btn btn--outline" onClick={onClose}>Cancel</button>
-            <button className="btn" type="submit" disabled={saving}>
-              {saving ? 'Saving…' : exhibition ? 'Save changes' : 'Add exhibition'}
+            <button type="button" className="btn btn--outline" onClick={onClose}>
+              Cancel
+            </button>
+            <button className="btn" type="submit" disabled={saving || uploading}>
+              {saving ? 'Saving…' : entry ? 'Save changes' : 'Add to gallery'}
             </button>
           </div>
         </form>

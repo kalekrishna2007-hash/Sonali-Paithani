@@ -25,17 +25,20 @@ const safeName = (name) =>
     .slice(0, 48) || 'image';
 
 /**
- * Stores an uploaded image and returns its public URL.
+ * Stores an uploaded image or video clip and returns its public URL.
  * Supabase Storage when keys are configured (free 1 GB tier), otherwise local
  * disk under /uploads so development needs no accounts at all.
+ *
+ * `folder` groups objects inside the bucket: product photos live under
+ * `products/`, the Our Legacy and Exhibitions galleries under `media/`.
  */
-export async function saveImage({ buffer, originalname, mimetype }) {
+export async function saveImage({ buffer, originalname, mimetype, folder = 'products' }) {
   const ext = (path.extname(originalname || '') || '.jpg').toLowerCase();
   const filename = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}-${safeName(originalname)}${ext}`;
 
   if (storageMode === 'supabase') {
     const client = await getSupabase();
-    const objectPath = `products/${filename}`;
+    const objectPath = `${folder}/${filename}`;
     const { error } = await client.storage
       .from(config.supabase.bucket)
       .upload(objectPath, buffer, { contentType: mimetype, upsert: false });

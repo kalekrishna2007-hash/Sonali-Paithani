@@ -35,8 +35,8 @@ npm run dev          # API on :4000, Vite on :3000 (proxies /api and /uploads)
 ```
 
 Open <http://localhost:3000>. Nothing needs configuring: with no `.env` the API
-runs on in-memory Postgres and seeds demo sarees, collections, legacy stories and
-exhibitions. Data resets on restart, which is the point.
+runs on in-memory Postgres and seeds demo sarees, collections and both photo &
+video galleries. Data resets on restart, which is the point.
 
 **Admin dashboard:** <http://localhost:3000/admin> — `admin@sonalipaithani.com` /
 `paithani@123` (development defaults only).
@@ -95,7 +95,7 @@ server/
   app.js              express wiring, security headers, robots/sitemap, SPA fallback
   env.js              single source of truth for configuration
   schema.sql          idempotent DDL, re-applied on every boot
-  seed.js             demo catalogue + legacy/exhibition content
+  seed.js             demo catalogue + gallery media
   auth.js             admin users, password hashing, JWT guard
   routes/public.js    storefront + customer endpoints
   routes/admin.js     dashboard endpoints (everything behind requireAdmin)

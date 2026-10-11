@@ -9,22 +9,44 @@ const text = (value, max = 4000) => {
   return trimmed ? trimmed.slice(0, max) : null;
 };
 
-const imageList = (value) =>
+const mediaList = (value) =>
   (Array.isArray(value) ? value : [])
-    .map((item) => String(item).trim())
+    .map((item) => String(item || '').trim())
     .filter(Boolean)
-    .slice(0, 12);
+    .slice(0, 24);
 
 const activeFlag = (value) => value !== false && value !== 'false' && value !== 0 && value !== '0';
 
 /* ─── Our Legacy ───────────────────────────────────────────────────────── */
 
+/**
+ * Entries stored before this section became a gallery only have the old
+ * single-photo column, so fall back to it until the entry is saved again.
+ */
+const legacyMedia = (row) => {
+  const media = mediaList(row.media);
+  if (media.length) return media;
+  const single = text(row.image_url, 500);
+  return single ? [single] : [];
+};
+
+const exhibitionMedia = (row) => {
+  const media = mediaList(row.media);
+  return media.length ? media : mediaList(parseJson(row.images));
+};
+
+/**
+ * Photos and videos only — no name, role or quote is read out of the row, so
+ * nothing about the person can leak to the storefront.
+ */
 export function serializeLegacy(row) {
   if (!row) return null;
   return {
-    ...row,
+    id: row.id,
+    media: legacyMedia(row),
     sort_order: Number(row.sort_order || 0),
     is_active: row.is_active !== false,
+    created_at: row.created_at,
   };
 }
 
@@ -37,21 +59,13 @@ export async function listLegacy({ includeInactive = false } = {}) {
 }
 
 export async function createLegacy(body = {}) {
-  const celebrity_name = text(body.celebrity_name, 120);
-  if (!celebrity_name || celebrity_name.length < 2) throw httpError(400, 'Add the name of the personality');
+  const media = mediaList(body.media);
+  if (!media.length) throw httpError(400, 'Add at least one photo or video');
   const id = newId();
   await q(
-    `insert into legacy_reviews (id, celebrity_name, title, review, image_url, sort_order, is_active)
-     values ($1,$2,$3,$4,$5,$6,$7)`,
-    [
-      id,
-      celebrity_name,
-      text(body.title, 160),
-      text(body.review, 4000),
-      text(body.image_url, 500),
-      Number(body.sort_order) || 0,
-      activeFlag(body.is_active),
-    ],
+    `insert into legacy_reviews (id, media, sort_order, is_active)
+     values ($1,$2,$3,$4)`,
+    [id, JSON.stringify(media), Number(body.sort_order) || 0, activeFlag(body.is_active)],
   );
   return serializeLegacy(await one('select * from legacy_reviews where id = $1', [id]));
 }
@@ -59,21 +73,14 @@ export async function createLegacy(body = {}) {
 export async function updateLegacy(id, body = {}) {
   const existing = await one('select * from legacy_reviews where id = $1', [id]);
   if (!existing) throw httpError(404, 'Legacy entry not found');
-  const merged = { ...existing, ...body };
-  const celebrity_name = text(merged.celebrity_name, 120);
-  if (!celebrity_name || celebrity_name.length < 2) throw httpError(400, 'Add the name of the personality');
+  // `media` is only replaced when the request carries it, so the dashboard's
+  // hide/publish and reorder actions cannot wipe an entry's gallery.
+  const media = body.media === undefined ? legacyMedia(existing) : mediaList(body.media);
+  if (body.media !== undefined && !media.length) throw httpError(400, 'Add at least one photo or video');
+  const merged = { ...serializeLegacy(existing), ...body };
   await q(
-    `update legacy_reviews set celebrity_name = $2, title = $3, review = $4, image_url = $5,
-       sort_order = $6, is_active = $7 where id = $1`,
-    [
-      existing.id,
-      celebrity_name,
-      text(merged.title, 160),
-      text(merged.review, 4000),
-      text(merged.image_url, 500),
-      Number(merged.sort_order) || 0,
-      activeFlag(merged.is_active),
-    ],
+    `update legacy_reviews set media = $2, sort_order = $3, is_active = $4 where id = $1`,
+    [existing.id, JSON.stringify(media), Number(merged.sort_order) || 0, activeFlag(merged.is_active)],
   );
   return serializeLegacy(await one('select * from legacy_reviews where id = $1', [existing.id]));
 }
@@ -87,13 +94,15 @@ export async function deleteLegacy(id) {
 
 /* ─── Exhibitions ──────────────────────────────────────────────────────── */
 
+/** Photos and videos only — no title, place or write-up is published. */
 export function serializeExhibition(row) {
   if (!row) return null;
   return {
-    ...row,
-    images: parseJson(row.images),
+    id: row.id,
+    media: exhibitionMedia(row),
     sort_order: Number(row.sort_order || 0),
     is_active: row.is_active !== false,
+    created_at: row.created_at,
   };
 }
 
@@ -106,22 +115,13 @@ export async function listExhibitions({ includeInactive = false } = {}) {
 }
 
 export async function createExhibition(body = {}) {
-  const title = text(body.title, 160);
-  if (!title || title.length < 2) throw httpError(400, 'Give the exhibition a title');
+  const media = mediaList(body.media);
+  if (!media.length) throw httpError(400, 'Add at least one photo or video');
   const id = newId();
   await q(
-    `insert into exhibitions (id, title, location, event_date, description, images, sort_order, is_active)
-     values ($1,$2,$3,$4,$5,$6,$7,$8)`,
-    [
-      id,
-      title,
-      text(body.location, 200),
-      text(body.event_date, 80),
-      text(body.description, 4000),
-      JSON.stringify(imageList(body.images)),
-      Number(body.sort_order) || 0,
-      activeFlag(body.is_active),
-    ],
+    `insert into exhibitions (id, media, sort_order, is_active)
+     values ($1,$2,$3,$4)`,
+    [id, JSON.stringify(media), Number(body.sort_order) || 0, activeFlag(body.is_active)],
   );
   return serializeExhibition(await one('select * from exhibitions where id = $1', [id]));
 }
@@ -129,22 +129,12 @@ export async function createExhibition(body = {}) {
 export async function updateExhibition(id, body = {}) {
   const existing = await one('select * from exhibitions where id = $1', [id]);
   if (!existing) throw httpError(404, 'Exhibition not found');
+  const media = body.media === undefined ? exhibitionMedia(existing) : mediaList(body.media);
+  if (body.media !== undefined && !media.length) throw httpError(400, 'Add at least one photo or video');
   const merged = { ...serializeExhibition(existing), ...body };
-  const title = text(merged.title, 160);
-  if (!title || title.length < 2) throw httpError(400, 'Give the exhibition a title');
   await q(
-    `update exhibitions set title = $2, location = $3, event_date = $4, description = $5,
-       images = $6, sort_order = $7, is_active = $8 where id = $1`,
-    [
-      existing.id,
-      title,
-      text(merged.location, 200),
-      text(merged.event_date, 80),
-      text(merged.description, 4000),
-      JSON.stringify(imageList(merged.images)),
-      Number(merged.sort_order) || 0,
-      activeFlag(merged.is_active),
-    ],
+    `update exhibitions set media = $2, sort_order = $3, is_active = $4 where id = $1`,
+    [existing.id, JSON.stringify(media), Number(merged.sort_order) || 0, activeFlag(merged.is_active)],
   );
   return serializeExhibition(await one('select * from exhibitions where id = $1', [existing.id]));
 }
