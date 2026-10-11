@@ -34,9 +34,11 @@ async function main() {
 }
 
 main().catch(async (error) => {
-  console.error('Failed to start API:', error.message);
-  if (/ECONNREFUSED|ENOTFOUND|password authentication|does not exist/i.test(error.message)) {
-    console.error('Check DATABASE_URL in server/.env — or leave it empty to run on in-memory Postgres.');
+  console.error(`[api] Failed to start API: ${error.message}`);
+  // db.js turns a driver error into the checks that actually apply to it.
+  for (const hint of error.hints || []) console.error(`[api]   · ${hint}`);
+  if (dbMode === 'postgres') {
+    console.error('[api] Fix DATABASE_URL in server/.env — or leave it empty to run on in-memory Postgres.');
   }
   await closeDb().catch(() => {});
   process.exit(1);
