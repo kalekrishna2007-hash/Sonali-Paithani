@@ -6,11 +6,29 @@ import { uploadsDir } from '../db.js';
 
 let supabase;
 
+/**
+ * supabase-js wires up a Realtime client on every `createClient` call, and on a
+ * runtime without a WebSocket it refuses to build the client at all — which is
+ * what broke image uploads on Render, where the service runs on Node 20 (the
+ * global `WebSocket` only landed in Node 22).
+ *
+ * Nothing here uses Realtime: uploads and deletes are plain HTTPS against
+ * Storage. So hand it whatever the runtime has — the native WebSocket when it
+ * exists, otherwise a placeholder that only speaks up if Realtime is ever
+ * actually used.
+ */
+class RealtimeUnavailable {
+  constructor() {
+    throw new Error('Realtime needs a WebSocket implementation: run Node.js 22+ to use it.');
+  }
+}
+
 async function getSupabase() {
   if (!supabase) {
     const { createClient } = await import('@supabase/supabase-js');
     supabase = createClient(config.supabase.url, config.supabase.serviceRoleKey, {
       auth: { persistSession: false },
+      realtime: { transport: globalThis.WebSocket ?? RealtimeUnavailable },
     });
   }
   return supabase;
