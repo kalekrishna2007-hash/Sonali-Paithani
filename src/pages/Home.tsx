@@ -4,6 +4,7 @@ import { useAsync } from '../lib/useAsync';
 import { useApp } from '../lib/store';
 import { whatsappChatUrl } from '../lib/format';
 import { Hero } from '../components/Hero';
+import { MediaWall } from '../components/MediaGallery';
 import { ProductCard } from '../components/ProductCard';
 import { DiamondIcon, LoomIcon, SunIcon, TruckIcon, WhatsAppIcon } from '../components/icons';
 
@@ -45,6 +46,95 @@ function ProductRail({ title, subtitle, params, cta }: { title: string; subtitle
         )}
       </div>
     </section>
+  );
+}
+
+/**
+ * A preview of one of the two media galleries (Our Legacy, Exhibitions): the
+ * first few tiles of the same wall its own page shows, with a link across.
+ * Nothing published yet means no section at all — an empty grid on the home
+ * page reads as a broken page rather than as "nothing here yet".
+ */
+function GalleryRail({
+  subtitle,
+  title,
+  blurb,
+  tone,
+  entries,
+  loading,
+  href,
+  cta,
+}: {
+  subtitle: string;
+  title: string;
+  blurb: string;
+  tone: 'cream' | 'plain';
+  entries: { id: string; media: string[] }[];
+  loading: boolean;
+  href: string;
+  cta: string;
+}) {
+  if (!loading && !entries.length) return null;
+
+  return (
+    <section className={`section${tone === 'cream' ? ' section--cream' : ''}`}>
+      <div className="container">
+        <div className="row row--between row--wrap" style={{ marginBottom: '1.6rem' }}>
+          <div>
+            <span className="eyebrow">{subtitle}</span>
+            <h2 style={{ margin: '0.3rem 0 0' }}>{title}</h2>
+            <p className="muted" style={{ maxWidth: '46rem' }}>
+              {blurb}
+            </p>
+          </div>
+          <Link className="btn btn--outline btn--sm" to={href}>
+            {cta}
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="media-wall">
+            {[0, 1, 2, 3, 4, 5].map((key) => (
+              <div className="skeleton media-wall__tile" key={key} />
+            ))}
+          </div>
+        ) : (
+          <MediaWall entries={entries} limit={6} />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function LegacyRail() {
+  const { data, loading } = useAsync(() => api.legacy(), []);
+  return (
+    <GalleryRail
+      subtitle="Our Legacy"
+      title="Worn by the people we admire"
+      blurb="From the stage to the silver screen — moments with the personalities who chose a saree by Sonali Paithani for their most photographed days."
+      tone="cream"
+      entries={data?.legacy || []}
+      loading={loading}
+      href="/legacy"
+      cta="See the whole gallery"
+    />
+  );
+}
+
+function ExhibitionsRail() {
+  const { data, loading } = useAsync(() => api.exhibitions(), []);
+  return (
+    <GalleryRail
+      subtitle="Exhibitions"
+      title="Where our looms have travelled"
+      blurb="Handloom utsavs, heritage expos and city pop-ups — photographs and clips from the stalls where visitors could feel the zari and meet the weavers behind every drape."
+      tone="plain"
+      entries={data?.exhibitions || []}
+      loading={loading}
+      href="/exhibitions"
+      cta="See every exhibition"
+    />
   );
 }
 
@@ -156,6 +246,10 @@ export function Home() {
       </section>
 
       <ProductRail title="New Arrivals" subtitle="Fresh off the loom" params={{ new_arrival: true }} cta="View new arrivals" />
+
+      <LegacyRail />
+
+      <ExhibitionsRail />
 
       <section className="band">
         <div className="container band__inner">

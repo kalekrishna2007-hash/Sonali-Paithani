@@ -28,16 +28,18 @@ export function MediaThumb({ url, className, style }: TileProps) {
 
 /**
  * The wall both gallery pages show: every photo and video of every published
- * set, in dashboard order, with no captions of any kind.
+ * set, in dashboard order, with no captions of any kind. `limit` shows only the
+ * first tiles, which is what the storefront home page previews.
  */
-export function MediaWall({ entries }: { entries: { id: string; media: string[] }[] }) {
+export function MediaWall({ entries, limit }: { entries: { id: string; media: string[] }[]; limit?: number }) {
   const tiles = entries.flatMap((entry) =>
     entry.media.map((url, index) => ({ key: `${entry.id}-${index}`, url })),
   );
+  const shown = limit ? tiles.slice(0, limit) : tiles;
 
   return (
     <div className="media-wall">
-      {tiles.map((tile) => (
+      {shown.map((tile) => (
         <figure className="media-wall__tile" key={tile.key}>
           <MediaItem url={tile.url} className="media-wall__media" />
         </figure>
