@@ -217,13 +217,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* The supplied photograph is a finished artwork, so its own type sits baked into
    the pixels — a text block along the left edge and a thin word rail top right.
    This scrim covers both, leaving the live, selectable text in .hero__col as the
-   only copy on screen. Left stop is opaque past 35% (where that type ends). */
+   only copy on screen. Its widest baked line (the HERITAGE | HANDLOOM | PURE SILK
+   | FOREVER strip) reaches 40% of the width, so the horizontal stop stays opaque
+   a little past that, and the radial masks the word rail at the top right. */
 .hero__scrim {
   position: absolute; inset: 0; z-index: 1;
   background:
     radial-gradient(17% 32% at 93% 15%, rgba(27, 19, 16, 0.98) 0%, rgba(27, 19, 16, 0.96) 46%, rgba(27, 19, 16, 0.62) 76%, rgba(27, 19, 16, 0) 100%),
     linear-gradient(270deg, rgba(27, 19, 16, 0.5) 0%, rgba(27, 19, 16, 0) 17%),
-    linear-gradient(90deg, #1b1310 0%, #1b1310 38%, rgba(27, 19, 16, 0.94) 46%, rgba(27, 19, 16, 0.58) 55%, rgba(27, 19, 16, 0.16) 68%, rgba(27, 19, 16, 0) 80%);
+    linear-gradient(90deg, #1b1310 0%, #1b1310 41%, rgba(27, 19, 16, 0.94) 48%, rgba(27, 19, 16, 0.58) 57%, rgba(27, 19, 16, 0.16) 70%, rgba(27, 19, 16, 0) 81%);
 }
 
 .hero__inner { position: relative; z-index: 2; display: grid; align-content: center; padding: clamp(3rem, 6vw, 4.6rem) 0; }
