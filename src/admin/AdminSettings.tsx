@@ -178,7 +178,7 @@ export function AdminSettings() {
           <label className="field"><span>Default advance %</span><input className="input" type="number" min={0} max={100} value={form.advance_percent} onChange={(event) => set('advance_percent', event.target.value)} /></label>
           <label className="field field--full">
             <span>Bank details (optional, added under the UPI line)</span>
-            <input className="input" value={form.store_bank} onChange={(event) => set('store_bank', event.target.value)} placeholder="A/c 1234567890 · IFSC ABCD0001234 · Sonali Paithani" />
+            <input className="input" value={form.store_bank} onChange={(event) => set('store_bank', event.target.value)} placeholder="A/c 1234567890 · IFSC ABCD0001234 · Sonali Handlooms" />
           </label>
           <label className="field field--full">
             <span>Enquiry notice shown to customers</span>

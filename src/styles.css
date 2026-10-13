@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────────────────────
-   Sonali Paithani — design system
+   Sonali Handlooms — design system
    Colours and type follow the brand: deep maroon, antique gold, ivory silk.
    ──────────────────────────────────────────────────────────────────────────── */
 
@@ -170,7 +170,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .logo__mark { display: block; user-select: none; }
 /* Letter-spacing leaves a trailing space after the last glyph, which pushes the
    visible word ~half a space left of centre. A negative right margin equal to the
-   tracking cancels it, so "SONALI" and "PAITHANI" sit on the same optical centre. */
+   tracking cancels it, so "SONALI" and "HANDLOOMS" sit on the same optical centre. */
 .logo__word { font-family: var(--serif); font-size: 1.22rem; line-height: 1.1; letter-spacing: 0.3em; margin-right: -0.3em; text-transform: uppercase; }
 .logo__sub { font-size: 0.52rem; line-height: 1.1; letter-spacing: 0.42em; margin-right: -0.42em; text-transform: uppercase; color: var(--muted); }
 

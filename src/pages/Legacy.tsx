@@ -5,8 +5,8 @@ import { MediaWall } from '../components/MediaGallery';
 
 /**
  * "Our Legacy" — photos and video clips of personalities wearing a Sonali
- * Paithani. Media only: no name, role or quote is published, here or in the
- * dashboard that feeds it.
+ * Handlooms saree. Media only: no name, role or quote is published, here or in
+ * the dashboard that feeds it.
  */
 export function Legacy() {
   const { data, loading } = useAsync(() => api.legacy(), []);
@@ -20,7 +20,7 @@ export function Legacy() {
           <h1 style={{ marginTop: '0.4rem' }}>Worn by the people we admire</h1>
           <div className="divider-gold divider-gold--center" />
           <p className="muted" style={{ maxWidth: '46rem', marginInline: 'auto' }}>
-            From the stage to the silver screen — moments with the personalities who chose a saree by Sonali Paithani
+            From the stage to the silver screen — moments with the personalities who chose a saree by Sonali Handlooms
             for their most photographed days.
           </p>
         </div>
@@ -54,7 +54,7 @@ export function Legacy() {
             <span className="eyebrow" style={{ color: 'var(--gold-soft)' }}>
               Be part of it
             </span>
-            <h2>Wearing a Sonali Paithani for your big day?</h2>
+            <h2>Wearing a Sonali Handlooms saree for your big day?</h2>
             <p>
               Send us your occasion on WhatsApp and our studio will help you choose the drape — and we would love to
               feature your photographs here.

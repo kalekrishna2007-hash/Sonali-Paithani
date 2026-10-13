@@ -65,7 +65,7 @@ services:
       - key: ADMIN_EMAIL
         value: admin@sonalipaithani.com
       - key: STORE_NAME
-        value: Sonali Paithani
+        value: Sonali Handlooms
       - key: STORE_PHONE
         value: '919822055443'
       - key: STORE_WHATSAPP
@@ -75,4 +75,4 @@ services:
       - key: STORE_UPI
         sync: false
       - key: STORE_ADDRESS
-        value: 'Sonali Paithani, Yeola, Nashik - 423401'
+        value: 'Sonali Handlooms, Yeola, Nashik - 423401'

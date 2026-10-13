@@ -1,4 +1,4 @@
-# Sonali Paithani
+# Sonali Handlooms
 
 Handwoven Paithani sarees from Yeola, Nashik — storefront, enquiry workflow and
 admin dashboard in one deployable app.

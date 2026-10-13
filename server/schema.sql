@@ -1,4 +1,4 @@
--- Sonali Paithani — database schema.
+-- Sonali Handlooms — database schema.
 -- Runs automatically on server boot (all statements are idempotent), and can be
 -- pasted into the Supabase SQL editor.
 

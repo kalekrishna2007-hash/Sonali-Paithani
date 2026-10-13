@@ -12,15 +12,15 @@ const enquiry = {
   advance_amount: 20400,
 };
 
-const settings = { store_name: 'Sonali Paithani', store_upi: 'sonalipaithani@upi' };
+const settings = { store_name: 'Sonali Handlooms', store_upi: 'sonalipaithani@upi' };
 const items = [{ product_name: 'Peacock Munni Paithani', quantity: 1, unit_price: 68000 }];
 
 test('upiLink builds the deep link every UPI app scans', () => {
-  const link = upiLink({ upi: 'sonalipaithani@upi', payee: 'Sonali Paithani', amount: 20400, note: 'SP-2026-0011' });
+  const link = upiLink({ upi: 'sonalipaithani@upi', payee: 'Sonali Handlooms', amount: 20400, note: 'SP-2026-0011' });
   const url = new URL(link);
   assert.equal(url.protocol, 'upi:');
   assert.equal(url.searchParams.get('pa'), 'sonalipaithani@upi');
-  assert.equal(url.searchParams.get('pn'), 'Sonali Paithani');
+  assert.equal(url.searchParams.get('pn'), 'Sonali Handlooms');
   assert.equal(url.searchParams.get('am'), '20400.00');
   assert.equal(url.searchParams.get('cu'), 'INR');
   assert.equal(url.searchParams.get('tn'), 'SP-2026-0011');
@@ -32,7 +32,7 @@ test('upiLink refuses a malformed UPI id', () => {
 });
 
 test('qrPng renders a valid PNG whose pixels match the QR matrix', () => {
-  const link = upiLink({ upi: 'sonalipaithani@upi', payee: 'Sonali Paithani', amount: 20400 });
+  const link = upiLink({ upi: 'sonalipaithani@upi', payee: 'Sonali Handlooms', amount: 20400 });
   const scale = qrScaleFor(link, 480);
   const png = qrPng(link, { scale });
 

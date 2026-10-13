@@ -32,7 +32,7 @@ export function Hero() {
           <div className="hero__masthead">
             <div className="hero__lockup">
               <LogoMark size={46} />
-              <strong>Paithani</strong>
+              <strong>Handlooms</strong>
               <span className="hero__tagline">A legacy in every weave</span>
               <Ornament />
             </div>

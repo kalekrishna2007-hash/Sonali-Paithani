@@ -1,4 +1,4 @@
-# Deploying Sonali Paithani to your own domain
+# Deploying Sonali Handlooms to your own domain
 
 Everything needed to put this store on `https://your-domain.com` — one Node
 process serving both the API and the built storefront.
@@ -269,7 +269,7 @@ and a curious crawler perform.
 ```bash
 BASE=https://your-domain.com
 
-curl -s $BASE/api/health                    # {"ok":true,"store":"Sonali Paithani",...}
+curl -s $BASE/api/health                    # {"ok":true,"store":"Sonali Handlooms",...}
 curl -s $BASE/api/collections | head -c 200 # real collections, not demo ones
 curl -s $BASE/robots.txt                    # lists your sitemap URL, disallows /admin
 curl -s $BASE/sitemap.xml | head -20        # <loc> entries on your domain

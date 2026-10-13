@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Deployment readiness audit for Sonali Paithani.
+ * Deployment readiness audit for Sonali Handlooms.
  *
  *   npm run deploy:check
  *
@@ -299,7 +299,7 @@ const order = { blocker: 0, warn: 1, ok: 2 };
 results.sort((a, b) => order[a.level] - order[b.level]);
 
 console.log('');
-console.log(C(1, '  Sonali Paithani — deployment readiness'));
+console.log(C(1, '  Sonali Handlooms — deployment readiness'));
 console.log(`  ${config.store.name} · database: ${dbMode} · storage: ${storageMode}`);
 console.log(`  ${'─'.repeat(96)}`);
 for (const item of results) {

@@ -112,7 +112,7 @@ function LegacyRail() {
     <GalleryRail
       subtitle="Our Legacy"
       title="Worn by the people we admire"
-      blurb="From the stage to the silver screen — moments with the personalities who chose a saree by Sonali Paithani for their most photographed days."
+      blurb="From the stage to the silver screen — moments with the personalities who chose a saree by Sonali Handlooms for their most photographed days."
       tone="cream"
       entries={data?.legacy || []}
       loading={loading}

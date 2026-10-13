@@ -173,7 +173,7 @@ export function NavDrawer({ open, onClose }: Props) {
 
         <div className="drawer__foot">
           <h4>Need help?</h4>
-          <p>{settings?.store_address || 'Sonali Paithani, Yeola, Nashik - 423401'}</p>
+          <p>{settings?.store_address || 'Sonali Handlooms, Yeola, Nashik - 423401'}</p>
           <p>
             Ph - <a href={telHref(settings?.store_phone || '919822055443')}>+{settings?.store_phone || '919822055443'}</a>
             {' · '}

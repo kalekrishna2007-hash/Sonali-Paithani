@@ -59,7 +59,7 @@ export function StoreLayout({ children }: { children: ReactNode }) {
           <div>
             <h4>Visit the studio</h4>
             <ul>
-              <li>{settings?.store_address || 'Sonali Paithani, Yeola, Nashik - 423401'}</li>
+              <li>{settings?.store_address || 'Sonali Handlooms, Yeola, Nashik - 423401'}</li>
               <li><a href={telHref(phone)}>Ph - +{phone}</a></li>
               <li><a href={`mailto:${settings?.store_email || 'yeola@sonalipaithani.com'}`}>{settings?.store_email || 'yeola@sonalipaithani.com'}</a></li>
               <li>Mon – Sat, 10:00 – 19:00 IST</li>
@@ -68,7 +68,7 @@ export function StoreLayout({ children }: { children: ReactNode }) {
         </div>
 
         <div className="container footer__bottom">
-          <span>© {new Date().getFullYear()} Sonali Paithani, Yeola. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Sonali Handlooms, Yeola. All rights reserved.</span>
           <span>Handloom mark · Silk mark certified · Made in Maharashtra, India</span>
         </div>
       </footer>

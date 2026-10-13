@@ -58,8 +58,8 @@ export const config = {
   adminPassword: process.env.ADMIN_PASSWORD || 'paithani@123',
 
   store: {
-    name: process.env.STORE_NAME || 'Sonali Paithani',
-    address: process.env.STORE_ADDRESS || "Sonali Paithani, Yeola, Nashik - 423401",
+    name: process.env.STORE_NAME || 'Sonali Handlooms',
+    address: process.env.STORE_ADDRESS || "Sonali Handlooms, Yeola, Nashik - 423401",
     phone: process.env.STORE_PHONE || '919822055443',
     email: process.env.STORE_EMAIL || 'yeola@sonalipaithani.com',
     upi: process.env.STORE_UPI || 'sonalipaithani@upi',

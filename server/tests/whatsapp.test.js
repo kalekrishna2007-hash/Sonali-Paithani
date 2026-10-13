@@ -67,10 +67,10 @@ test('composeApprovalMessage produces a ready-to-send message with no leftover t
   const message = composeApprovalMessage({
     enquiry,
     items,
-    settings: { store_name: 'Sonali Paithani', store_upi: 'sonalipaithani@upi', store_phone: '919822055443' },
+    settings: { store_name: 'Sonali Handlooms', store_upi: 'sonalipaithani@upi', store_phone: '919822055443' },
     overrides: {},
   });
-  assert.match(message, /Sonali Paithani/);
+  assert.match(message, /Sonali Handlooms/);
   assert.match(message, /SP-2026-0007/);
   assert.match(message, /Peacock Munni Paithani/);
   assert.match(message, /Total order value:\* ₹68,000/);

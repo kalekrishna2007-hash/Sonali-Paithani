@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# Sonali Paithani — production image.
+# Sonali Handlooms — production image.
 #
 # One process serves both the API and the built storefront, so this is the whole
 # deployment: build the bundle, then run server/index.js.
