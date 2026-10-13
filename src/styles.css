@@ -215,15 +215,17 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .hero__art img { width: 100%; height: 100%; object-fit: cover; object-position: 50% center; }
 
 /* The supplied photograph is a finished artwork, so its own type sits baked into
-   the pixels — a text block along the left edge and a thin word rail top right.
+   the pixels — a text block down the left edge and a thin word rail top right.
    This scrim covers both, leaving the live, selectable text in .hero__col as the
-   only copy on screen. Its widest baked line (the HERITAGE | HANDLOOM | PURE SILK
-   | FOREVER strip) reaches 40% of the width, so the horizontal stop stays opaque
-   a little past that, and the radial masks the word rail at the top right. */
+   only copy on screen. The widest baked line (the HERITAGE | HANDLOOM | PURE SILK
+   | FOREVER strip) ends around 40% of the width, so the horizontal stop stays
+   opaque a little past that. The word rail hugs the right edge — 95% to 100% of
+   the width, and between 0% and 22% of the height once the cover crop is taken
+   into account at every desktop width — which is the box the radial is cut for. */
 .hero__scrim {
   position: absolute; inset: 0; z-index: 1;
   background:
-    radial-gradient(17% 32% at 93% 15%, rgba(27, 19, 16, 0.98) 0%, rgba(27, 19, 16, 0.96) 46%, rgba(27, 19, 16, 0.62) 76%, rgba(27, 19, 16, 0) 100%),
+    radial-gradient(9% 18% at 96% 13%, rgba(27, 19, 16, 0.99) 0%, rgba(27, 19, 16, 0.98) 72%, rgba(27, 19, 16, 0.6) 88%, rgba(27, 19, 16, 0) 100%),
     linear-gradient(270deg, rgba(27, 19, 16, 0.5) 0%, rgba(27, 19, 16, 0) 17%),
     linear-gradient(90deg, #1b1310 0%, #1b1310 41%, rgba(27, 19, 16, 0.94) 48%, rgba(27, 19, 16, 0.58) 57%, rgba(27, 19, 16, 0.16) 70%, rgba(27, 19, 16, 0) 81%);
 }
@@ -557,12 +559,13 @@ tr.is-selected td { background: var(--cream); }
   .admin__side .logo { margin: 0 1rem 0 0; }
   .admin__navlink { padding: 0.5rem 0.7rem; }
 }
-/* Hero on phones: the art is re-cropped hard onto the draped pallu with a
-   different source frame, which also keeps the baked-in artwork type out of shot,
-   so the scrim only has to buy legibility over a bottom-anchored text block. */
+/* Hero on phones: a portrait frame cut from the artwork around the draped pallu
+   is swapped in, and that frame deliberately stops short of both baked-in text
+   blocks, so the scrim only has to buy legibility over a bottom-anchored text
+   block. Because the source frame is already the right shape and crop, the image
+   needs no object-position nudge — cover only ever trims it. */
 @media (max-width: 720px) {
   .hero { min-height: min(660px, 84vh); }
-  .hero__art img { object-position: 70% center; }
   .hero__scrim {
     background:
       linear-gradient(180deg, rgba(20, 14, 12, 0.45) 0%, rgba(20, 14, 12, 0) 26%),
